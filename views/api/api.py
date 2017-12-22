@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-API_PREFIX = "octlink.tundra.v1"
+API_PREFIX = "octlink.quantum.v1"
 PARAM_NOT_NULL = "NotNull"
 
 PARAM_TYPE_STRING = "string"

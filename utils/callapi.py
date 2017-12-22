@@ -109,7 +109,7 @@ def parse_paras(paras, api_proto):
 
 
 if __name__ == "__main__":
-	api = "octlink.tundra.v1.host.APISyncHostAddr"
+	api = "octlink.quantum.v1.host.APISyncHostAddr"
 	paras = {
 		"hostKey": "c52987e0ea09a17dde5622a89e5fd695",
 	}

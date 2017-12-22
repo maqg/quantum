@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cp nginx.conf /etc/nginx/conf.d/tundra.conf
+cp nginx.conf /etc/nginx/conf.d/quantum.conf
 cp crt/server.key /etc/nginx/.
 cp crt/server.crt /etc/nginx/.
 

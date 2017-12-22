@@ -138,7 +138,7 @@ class UserLoginHandler(tornado.web.RequestHandler):
 			"password": self.get_argument("password"),
 			"role": 7,
 		}
-		argObj["api"] = "octlink.tundra.v1.account.APILoginByAccount"
+		argObj["api"] = "octlink.quantum.v1.account.APILoginByAccount"
 		argObj["paras"] = paras
 
 		self.db = dbmysql.mysqldb()
@@ -172,7 +172,7 @@ class UserLogoutHandler(tornado.web.RequestHandler):
 class ApiTestHandler(tornado.web.RequestHandler):
 	result = {
 		"moduleSelected": "account",
-		"apiSelected": "octlink.tundra.v1.account.APILoginByAccount",
+		"apiSelected": "octlink.quantum.v1.account.APILoginByAccount",
 		"request": "{}",
 		"reply": "{}",
 		"paras": "{}"
