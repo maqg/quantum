@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<ECRFiles>
+	<file index="1" name="tb_account" caption="">
+		<field name='ID' type='VARCHAR(10)' caption=''/>
+		<field name='U_State' type='TINYINT' caption=''/>
+		<field name='U_Type' type='INTEGER' caption=''/>
+		<field name='U_Name' type='VARCHAR(10)' caption=''/>
+		<field name='U_UKey' type='VARCHAR(10)' caption=''/>
+		<field name='U_LdapUid' type='VARCHAR(10)' caption=''/>
+		<field name='U_Password' type='VARCHAR(10)' caption=''/>
+		<field name='U_Email' type='VARCHAR(10)' caption=''/>
+		<field name='U_PhoneNumber' type='VARCHAR(10)' caption=''/>
+		<field name='U_LastLogin' type='BIGINT' caption=''/>
+		<field name='U_CreateTime' type='BIGINT' caption=''/>
+		<field name='U_LastSync' type='BIGINT' caption=''/>
+		<field name='U_Description' type='VARCHAR(10)' caption=''/>
+	</file>
+	<file index="1" name="tb_session" caption="">
+		<field name='ID' type='VARCHAR(10)' caption=''/>
+		<field name='S_UserId' type='VARCHAR(10)' caption=''/>
+		<field name='S_UserType' type='TINYINT' caption=''/>
+		<field name='S_UserName' type='VARCHAR(10)' caption=''/>
+		<field name='S_Cookie' type='VARCHAR(10)' caption=''/>
+		<field name='S_CreateTime' type='BIGINT' caption=''/>
+		<field name='S_LastSync' type='BIGINT' caption=''/>
+		<field name='S_ExpireTime' type='BIGINT' caption=''/>
+	</file>
+	<file index="1" name="tb_misc" caption="">
+		<field name='ID' type='BIGINT' caption=''/>
+		<field name='M_Name' type='VARCHAR(10)' caption=''/>
+		<field name='M_Value' type='VARCHAR(10)' caption=''/>
+		<field name='M_Type' type='VARCHAR(10)' caption=''/>
+	</file>
+	<file index="1" name="tb_apitrace" caption="">
+		<field name='ID' type='VARCHAR(10)' caption=''/>
+		<field name='AT_AccountId' type='VARCHAR(10)' caption=''/>
+		<field name='AT_Type' type='VARCHAR(10)' caption=''/>
+		<field name='AT_ApiId' type='VARCHAR(10)' caption=''/>
+		<field name='AT_State' type='VARCHAR(10)' caption=''/>
+		<field name='AT_Name' type='VARCHAR(10)' caption=''/>
+		<field name='AT_CreateTime' type='BIGINT' caption=''/>
+		<field name='AT_StartTime' type='BIGINT' caption=''/>
+		<field name='AT_FinishTime' type='BIGINT' caption=''/>
+		<field name='AT_User' type='VARCHAR(10)' caption=''/>
+		<field name='AT_ServerTaskId' type='VARCHAR(10)' caption=''/>
+		<field name='AT_Request' type='VARCHAR(10)' caption=''/>
+		<field name='AT_ServerRequest' type='VARCHAR(10)' caption=''/>
+		<field name='AT_Reply' type='TEXT' caption=''/>
+	</file>
+</ECRFiles>

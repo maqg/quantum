@@ -1,0 +1,10 @@
+#!/bin/sh
+
+python3 -mpy_compile *.py
+
+fileList=$(ls __pycache__)
+
+for file in $fileList; do
+	fileName=$(echo $file | awk -F'.' '{print $1}')
+	mv __pycache__/$file ./$fileName.pyc
+done
