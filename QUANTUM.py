@@ -27,7 +27,7 @@ import tornado.options
 from conf.config import *
 from views.api.api import API_MODULE_LIST, API_PREFIX, PARAM_TYPE_INT
 
-LISTEN_PORT = 9090
+LISTEN_PORT = 9999
 LISTEN_ADDR = "0.0.0.0"
 
 API_PROTOS = {}
