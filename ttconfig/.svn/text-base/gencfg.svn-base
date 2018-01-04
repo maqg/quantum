@@ -1,0 +1,481 @@
+#!/bin/sh
+
+JAVA_HOME_DF=/root/jdk/jdk1.7.0_09
+ANTHOME_DF=/root/jdk/apache-ant-1.8.2
+DSTDIR_DF=/OCT
+SYSTEM_DF=x86
+FLEX_VERSION_DF=4
+SYSTEM_DIR_DF=/tmp/root-rootfs/
+CROSS_HOME_DF=/usr/local/Cavium_Networks/OCTEON-SDK/tools
+OSTYPE_DF=LINUX
+DEBUG_DF=no
+CLASSUI_DF=yes
+BASH_PASSWD_DF=yes
+VERSION_DF=professional
+[ `uname -m` != "i686" ] && ARCH_DF="x86-64" || ARCH_DF="i686"
+LINUX_TYPE_DF=redcent
+
+CONFIG_FILE=config.status
+
+write_config_file ()
+{
+	if [ $SYSTEM = "x86" ]; then
+cat > $CONFIG_FILE <<EOF
+## Public Settings by ttconfig ##
+
+SRCDIR = $SRCDIR
+RAMDIR = /oct
+TOPDIR = $TOPDIR
+DSTDIR = $DSTDIR
+FLEX_VERSION = $FLEX_VERSION
+MIPS_LIBS = ./
+MIPS_INCLUDE = ./
+OCT_LIBS = -loct_cmn -loct_err -loct_db -lmysqlclient -lsqlite3 -loct_mempool $GLIB_LIBS
+ARCH = $ARCH
+GLIB_LIBS = $GLIB_LIBS
+GLIB_INCS = $GLIB_INCS
+ANTHOME=$ANTHOME
+JAVA_HOME=$JAVA_HOME
+CLASSHOME=.:$JAVA_HOME/lib/:$JAVA_HOME/jarlib
+PATH=$ANTHOME/bin:$JAVA_HOME/bin:$PATH
+OSTYPE = $OSTYPE
+LINUX_TYPE = $LINUX_TYPE
+VA_LIST_IS_ARRAY = $VA_LIST_IS_ARRAY
+UTMP_SUPPORT_GLIBC = $UTMP_SUPPORT_GLIBC
+PYTHON_LIBS = $PYTHON_LIBS
+PYTHON_INCS = $PYTHON_INCS
+OPENSSLVERSION = $OPENSSLVERSION
+DEBUG = $DEBUG
+CLASSUI = $CLASSUI
+BASH_PASSWD = $BASH_PASSWD
+WHO = $WHO
+VERSION = $VERSION
+
+export SRCDIR TOPDIR DSTDIR OSTYPE LINUX_TYPE VA_LIST_IS_ARRAY UTMP_SUPPORT_GLIBC PYTHON_LIBS PYTHON_INCS OPENSSLVERSION DEBUG CLASSUI BASH_PASSWD WHO GLIB_LIBS GLIB_INCS FLEX_VERSION ANTHOME JAVA_HOME CLASSHOME VERSION
+EOF
+	else
+cat > $CONFIG_FILE <<EOF
+## Public Settings by ttconfig ##
+
+SRCDIR = $SRCDIR
+RAMDIR = /oct
+TOPDIR = $TOPDIR
+DSTDIR = $DSTDIR
+MIPS_LIBS = ./
+MIPS_INCLUDE = ./
+OCT_LIBS = -loct_cmn -loct_err -loct_db -lmysqlclient -lsqlite3 -loct_mempool $GLIB_LIBS
+OSTYPE = $OSTYPE
+LINUX_TYPE = $LINUX_TYPE
+VA_LIST_IS_ARRAY = $VA_LIST_IS_ARRAY
+UTMP_SUPPORT_GLIBC = $UTMP_SUPPORT_GLIBC
+DEBUG = $DEBUG
+CLASSUI = $CLASSUI
+BASH_PASSWD = $BASH_PASSWD
+VERSION = $VERSION
+WHO = $WHO
+
+LINUX_DIR = $SYSTEM_DIR
+SYSTEM_DIR = $SYSTEM_DIR
+FLEX_VERSION = $FLEX_VERSION
+ARCH = $ARCH
+GLIB_LIBS = $GLIB_LIBS
+GLIB_INCS = $GLIB_INCS
+PYTHON_LIBS = $PYTHON_LIBS
+PYTHON_INCS = $PYTHON_INCS
+OPENSSLVERSION = $OPENSSLVERSION
+SYSTEM = $SYSTEM
+CROSS_HOME = $CROSS_HOME
+MIPS64_HOME = $CROSS_HOME/$SYSTEM
+CROSS_COMPILE = $SYSTEM-
+COMPILER_PREFIX = $SYSTEM-
+PATH=$CROSS_HOME/bin:$PATH
+
+export SRCDIR TOPDIR DSTDIR OSTYPE LINUX_TYPE VA_LIST_IS_ARRAY UTMP_SUPPORT_GLIBC PYTHON_LIBS PYTHON_INCS OPENSSLVERSION LINUX_DIR SYSTEM_DIR ARCH SYSTEM CROSS_HOME MIPS64_HOME CROSS_COMPILE COMPILER_PREFIX PATH WHO GLIB_LIBS GLIB_INCS FLEX_VERSION
+
+EOF
+	fi
+}
+
+readconfig ()
+{
+	if [ "$SYSTEM" = "" ]; then
+		echo "Please set the SYSTEM type \"mips64-octeon-linux-gnu,x86\",default [$SYSTEM_DF]:"
+		read SYSTEM
+		if [ ${#SYSTEM} -eq 0 ]; then
+			SYSTEM=$SYSTEM_DF
+			echo "SET SYSTEM type to $SYSTEM"
+			echo ""
+		fi
+	fi
+
+	if [ "$DSTDIR" = "" ]; then
+		echo "Please set dest directory,default[$DSTDIR_DF]:"
+		read DSTDIR
+		if [ ${#DSTDIR} -eq 0 ]; then
+			DSTDIR=$DSTDIR_DF
+			echo "SET DSTDIR to $DSTDIR"
+			echo ""
+		fi
+	fi
+
+	if [ $SYSTEM != "x86" ]; then
+		echo "Please set the SYSTEM DIR,default[$SYSTEM_DIR_DF]:"
+		read SYSTEM_DIR
+		if [ ${#SYSTEM_DIR} -eq 0 ]; then
+			SYSTEM_DIR=$SYSTEM_DIR_DF
+			echo "SET SYSTEM_DIR to $SYSTEM_DIR"
+			echo ""
+		fi
+
+		echo "Please set the CROSS_HOME,default[$CROSS_HOME_DF]:"
+		read CROSS_HOME
+		if [ ${#CROSS_HOME} -eq 0 ]; then
+			CROSS_HOME=$CROSS_HOME_DF
+			echo "SET CROSS_HOME to $CROSS_HOME"
+			echo ""
+		fi
+	fi
+
+	if [ "$ARCH" = "" ]; then
+		echo "Please set ARCH(i686,x86-64),default[$ARCH_DF]:"
+		read ARCH
+		if [ ${#ARCH} -eq 0 ]; then
+			ARCH=$ARCH_DF
+			echo "SET ARCH to $ARCH"
+			echo ""
+		fi
+	fi
+
+	if [ "$OSTYPE" = "" ]; then
+		echo "Please set OS TYPE,default[$OSTYPE_DF]:"
+		read OSTYPE
+		if [ ${#OSTYPE} -eq 0 ]; then
+			OSTYPE=$OSTYPE_DF
+			echo "SET OSTYPE to $OSTYPE"
+			echo ""
+		fi
+	fi
+
+	if [ -f /etc/debian_version ]; then
+		LINUX_TYPE=debian
+	else
+		LINUX_TYPE=$LINUX_TYPE_DF
+	fi
+
+	# to judge VA_LIST_IS_ARRAY
+	cat > valist.c <<EOF
+#include <stdarg.h>
+int main (int argc, char *argv[])
+{
+	va_list list1, list2; 
+	list1 = list2;
+	return 0;
+}
+EOF
+	gcc -o valist valist.c > /dev/null 2>&1
+	if [ "$?" != "0" ]; then
+		VA_LIST_IS_ARRAY=1
+	fi
+	rm -rf valist*
+
+	# to judge UTMP_SUPPORT_GLIBC
+	cat > utmptest.c <<EOF
+#include <utmp.h>
+int main(int argc, char *argv[])
+{
+	struct utmp ut;
+	ut.__glibc_reserved[0] = 1;
+	return 0;
+}
+EOF
+	gcc -o utmptest utmptest.c > /dev/null 2>&1
+	if [ "$?" = "0" ]; then
+		UTMP_SUPPORT_GLIBC=1
+	fi
+	rm -rf utmptest*
+
+	PY3_FLAG=$(whereis python3 | awk -F':' '{print $2}' | awk -F' ' '{print$1}' 2>/dev/null)
+	if [ "$PY3_FLAG" != "" ]; then
+		BASEDIR=$(dirname $PY3_FLAG)
+		PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$(dirname $BASEDIR)/lib/pkgconfig/
+		export PKG_CONFIG_PATH
+		echo PKG_CONFIG_PATH
+	fi
+
+	PYTHON_LIBS=$(pkg-config --libs python3 gthread-2.0 2>/dev/null )
+	PYTHON_INCS=$(pkg-config --cflags python3 2>/dev/null)
+
+	OPENSSL=$(openssl version | awk -F'.' '{print $2}')
+	if [ "$OPENSSL" = "0" ]; then
+		OPENSSLVERSION=10
+	else
+		OPENSSLVERSION=11
+	fi
+
+	if [ "$DEBUG" = "" ]; then
+		echo "Build debug version,yes/no,default[$DEBUG_DF]:"
+		read DEBUG
+	fi
+
+	if [ ${#DEBUG} -eq 0 ] || [ "$DEBUG" = "no" ] || [ "$DEBUG" = "No" ] || [ "$DEBUG" = "NO" ]; then
+		DEBUG=-DNODEBUG
+		echo "SET DEBUG to no"
+		echo ""
+	else
+		DEBUG="-g -DDEBUG -Wformat"
+		echo "SET DEBUG to yes"
+		echo ""
+	fi
+	
+	if [ "$BASH_PASSWD" = "" ]; then
+		echo "Build bashpwd version,yes/no,default[$BASH_PASSWD_DF]:"
+		read BASH_PASSWD
+	fi
+
+	if [ ${#BASH_PASSWD} -eq 0 ] || [ "$BASH_PASSWD" = "no" ] || [ "$BASH_PASSWD" = "No" ] || [ "$BASH_PASSWD" = "NO" ]; then
+		BASH_PASSWD="-DDISABLE_BASH_PASSWD"
+		echo "SET BASH_PASSWD to no"
+		echo ""
+	else
+		BASH_PASSWD="-DENABLE_BASH_PASSWD"
+		echo "SET BASH_PASSWD to yes"
+		echo ""
+	fi
+
+	GLIB_LIBS=$(pkg-config --libs glib-2.0 gthread-2.0 2>/dev/null )
+	GLIB_INCS=$(pkg-config --cflags glib-2.0 gthread-2.0 2>/dev/null)
+	
+	if [ "$GLIB_LIBS" = "" ]; then
+		GLIB_LIBS="-lglib -lgthread"
+		GLIB_INCS="-D_REENTRANT -I/usr/include/glib-1.2 -I/usr/lib64/glib/include"
+	fi
+
+	# read FLEX VERION
+	FLEX_VERSION=$(flex -V | awk -F'.' '{ print $3 }')
+	if [ "$FLEX_VERSION" = "" ]; then
+		FLEX_VERSION=$FLEX_VERSION_DF
+	fi
+
+	sleep 2
+}
+
+SYSTEM=$SYSTEM_DF
+FLEX_VERSION=$FLEX_VERSION_DF
+DSTDIR=$DSTDIR_DF
+JAVA_HOME=$JAVA_HOME_DF
+ANTHOME=$ANTHOME_DF
+ARCH=$ARCH_DF
+SYSTEM_DIR=$SYSTEM_DIR_DF
+CROSS_HOME=$CROSS_HOME_DF
+OSTYPE=$OSTYPE_DF
+DEBUG=$DEBUG_DF
+CLASSUI=$CLASSUI_DF
+BASH_PASSWD=$BASH_PASSWD_DF
+VERSION=$VERSION_DF
+VA_LIST_IS_ARRAY=0
+UTMP_SUPPORT_GLIBC=0
+
+process_paras()
+{
+	if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+		echo ""
+		echo "  --enable-debug|--disable-debug(default)"
+		echo "  --enable-classui(default)|--disable-classui"
+		echo "  --enable-bashpwd(default)--disable-bashpwd"
+		echo "  --dist-dir=($DSTDIR_DF)"
+		echo "  --system=($SYSTEM_DF|mips64-octeon-linux-gnu)"
+		echo "  --arch=($ARCH_DF|x86-64|generic)"
+		echo "  --version=($VERSION_DF|professional|desktop)"
+		echo "  --system-dir=($SYSTEM_DIR_DF)"
+		echo "  --cross-home=($CROSS_HOME_DF)"
+		echo "  --os-type=($OSTYPE_DF)"
+		echo "  --linux-type=($LINUX_TYPE_DF)"
+		echo "  --java-home=($JAVA_HOME_DF)"
+		echo "  --ant-home=($ANTHOME_DF)"
+		echo ""
+		exit 1
+	fi
+
+	PARAS="$1 $2 $3 $4 $5 $6 $7 $8 $9"
+
+	# check debug options 
+	TEMP=$(echo $PARAS | grep "\-\-enable\-debug")
+	if [ "$TEMP" != "" ]; then
+		DEBUG=yes
+	fi
+	echo "SET DEBUG option [$DEBUG]"
+
+	# check classui options 
+	TEMP=$(echo $PARAS | grep "\-\-disable\-classui")
+	if [ "$TEMP" != "" ]; then
+		CLASSUI=no
+	fi
+	echo "SET CLASSUI option [$CLASSUI]"
+
+	# check bashpwd options 
+	TEMP=$(echo $PARAS | grep "\-\-disable\-bashpwd")
+	if [ "$TEMP" != "" ]; then
+		BASH_PASSWD=no
+	fi
+	echo "SET BASHPWD option [$BASH_PASSWD]"
+
+	# check sytem type
+	TEMP=$(echo $PARAS | grep "\-\-system=")
+	if [ "$TEMP" != "" ]; then
+		SYSTEM=$(echo $TEMP | awk -F "--system=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "SET SYSTEM type [$SYSTEM]"
+
+	# ARCH
+	TEMP=$(echo $PARAS | grep "\-\-arch=")
+	if [ "$TEMP" != "" ]; then
+		ARCH=$(echo $TEMP | awk -F "--arch=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "SET ARCH type [$ARCH]"
+
+	# VERSION
+	TEMP=$(echo $PARAS | grep "\-\-version=")
+	if [ "$TEMP" != "" ]; then
+		ARCH=$(echo $TEMP | awk -F "--version=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "SET VERSION type [$VERSION]"
+
+	# check dist dir
+	TEMP=$(echo $PARAS | grep "\-\-dist\-dir=")
+	if [ "$TEMP" != "" ]; then
+		DSTDIR=$(echo $TEMP | awk -F "--dist-dir=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "SET DIST dir [$DSTDIR]"
+
+	# check system dir
+	TEMP=$(echo $PARAS | grep "\-\-system\-dir=")
+	if [ "$TEMP" != "" ]; then
+		SYSTEM_DIR=$(echo $TEMP | awk -F "--system-dir=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "SET SYSTEM dir [$SYSTEM_DIR]"
+
+	# check cross home
+	TEMP=$(echo $PARAS | grep "\-\-cross\-home=")
+	if [ "$TEMP" != "" ]; then
+		CROSS_HOME=$(echo $TEMP | awk -F "--cross-home=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "GOT CROSS home [$CROSS_HOME]"
+
+	# check system dir
+	TEMP=$(echo $PARAS | grep "\-\-linux\-type=")
+	if [ "$TEMP" != "" ]; then
+		LINUX_TYPE=$(echo $TEMP | awk -F "--linux-type=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "GOT LINUX type [$LINUX_TYPE]"
+
+	# check system dir
+	TEMP=$(echo $PARAS | grep "\-\-os\-type=")
+	if [ "$TEMP" != "" ]; then
+		OSTYPE=$(echo $TEMP | awk -F "--os-type=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+	fi
+	echo "GOT OSTYPE [$OSTYPE]"
+
+	# check java home
+	TEMP=$(echo $PARAS | grep "\-\-java\-home=")
+	if [ "$TEMP" != "" ]; then
+		JAVA_HOME=$(echo $TEMP | awk -F "--java-home=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+		if [ "$JAVA_HOME" = "" ]; then
+			JAVA_HOME=$JAVA_HOME_DF
+		fi
+	fi
+	echo "GOT JAVAHOME [$JAVA_HOME]"
+
+	# check ant home
+	TEMP=$(echo $PARAS | grep "\-\-ant\-home=")
+	if [ "$TEMP" != "" ]; then
+		ANTHOME=$(echo $TEMP | awk -F "--ant-home=" '{ print $2 }' | awk -F' ' '{ print $1 }')	
+		if [ "$ANT_HOME" = "" ]; then
+			ANTHOME=$ANTHOME_DF
+		fi
+	fi
+	echo "GOT ANTHOME [$ANTHOME]"
+}
+
+WHO=$(whoami)
+
+if [ "$1" = "-c" ]; then
+	# read PUBLIC CONFIG
+	process_paras "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9"
+
+	readconfig
+
+	# write config to CONFIG_FILE
+	write_config_file
+
+	ln -sf "$SRCDIR"/ttconfig/linux.mak "$TOPDIR"/rules.mak
+	exit 0
+elif [ "$1" = "-d" ]; then
+	if [ "$2" != "" ]; then
+		mkdir -p -m0750 "$2"
+	fi
+	exit 0
+elif [ "$1" = "-m" ]; then
+	curdir=`pwd`
+	# get file like ".sub"
+	dot=$(echo $2 | awk -F'.' '{ print $2 }')
+	if [ "$dot" != "" ]; then
+		# this is sub makefile,so no need to enter sub dir
+		mkfile="$2"
+		makext="$2"
+		Makefile=$curdir/Makefile$2
+		thedir=$(echo $curdir | awk -F"$TOPDIR/" '{ print $2}')
+	else
+		# this is main makefile,use default makefiel *.inf
+		mkfile=".inf"
+		makext=""
+		Makefile=$curdir/$2/Makefile
+		thedir=$(echo $curdir/$2 | awk -F"$TOPDIR/" '{ print $2}')
+	fi
+
+	if [ "$thedir" = "" ]; then
+		echo "thedir can't be null"
+		exit -1
+	fi
+
+	# write make info to makefile
+	echo "## Generate by ttconfig ##" > $Makefile
+	echo "" >> $Makefile
+
+	# if have extern makefile option like mk.cmn,include it
+	if [ "$makext" != "" ]; then
+		echo "MAKEXT = $makext" >> $Makefile
+	fi
+	echo "THEDIR = $thedir" >> $Makefile
+	TEMPDIR=$(basename $thedir)
+	echo "FRAMEDIR = $TEMPDIR" >> $Makefile
+	echo "" >> $Makefile
+	echo "include $TOPDIR/config.status" >> $Makefile
+	echo "include $TOPDIR/$thedir/mk$mkfile" >> $Makefile
+
+	# if rules.mak already exist,don't include it again
+	if ! grep "include \$(TOPDIR)/rules.mak" $TOPDIR/$thedir/mk$mkfile > /dev/null 2>&1; then
+		echo "include \$(TOPDIR)/rules.mak" >> $Makefile
+	fi
+	echo "-include $TOPDIR/$thedir/.depend" >> $Makefile
+	chmod 0640 $Makefile
+	exit 0
+elif [ "$1" = "-t" ]; then
+	if [ "$2" = "" ]; then
+		mkdir -p $DSTDIR
+	else
+		mkdir -p $DSTDIR/$2
+	fi
+elif [ "$1" = "-l" ]; then
+	if [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ]; then
+		echo "one of 3 paras is null"
+		exit 0
+	fi
+	if [ ! -d "$2" ]; then
+		echo "no such dir exist[$2]"
+		exit 0
+	fi
+	cd $2
+	ln -sf $3 $4
+fi
+
+exit 0
