@@ -1,0 +1,9 @@
+CT_CFLAGS:=-fno-strict-aliasing
+
+CCMODE = PROGRAM
+
+TARGET = cpuinfo
+
+SRCS = cpuinfo.c
+
+LIBS = $(TOPDIR)/lib/liboct_log.a

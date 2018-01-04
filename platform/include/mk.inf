@@ -1,0 +1,6 @@
+#
+# for include file
+#
+
+HDRS = *.h
+INCDIR = plat

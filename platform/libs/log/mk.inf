@@ -1,0 +1,12 @@
+CCMODE = STATICLIB
+
+HDRS = *.h
+INCDIR = plat
+
+OCT_CFLAGS := $(OCT_CFLAGS) -Wall -I$(MIPS_INCLUDE)
+
+SRCS = oct_debug.c backtrace.c
+
+TARGET = oct_log
+
+LIBS = -lpthread

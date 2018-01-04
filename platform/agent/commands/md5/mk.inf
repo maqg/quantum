@@ -1,0 +1,9 @@
+CT_CFLAGS:=-fno-strict-aliasing
+
+CCMODE = PROGRAM
+
+TARGET = oct_md5
+
+SRCS = md5.c
+
+LIBS = $(TOPDIR)/lib/liboct_log.a
