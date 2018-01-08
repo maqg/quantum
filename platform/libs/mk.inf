@@ -1,1 +1,1 @@
-SUBDIRS = log
+SUBDIRS = log common regexp sysinfo

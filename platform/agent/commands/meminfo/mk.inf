@@ -1,0 +1,15 @@
+CT_CFLAGS:=-fno-strict-aliasing
+
+CCMODE = PROGRAM
+
+TARGET = meminfo
+
+SRCS = meminfo.c
+
+
+
+LIBS =  -lm -ldl -lrt  -lresolv -lpcreposix -lpcre \
+		$(TOPDIR)/lib/liboct_log.a \
+		$(TOPDIR)/lib/liboct_sysinfo.a \
+		$(TOPDIR)/lib/liboct_regexp.a \
+		$(TOPDIR)/lib/liboct_common.a

@@ -1,1 +1,1 @@
-SUBDIRS = md5 cpuinfo
+SUBDIRS = md5 cpuinfo meminfo
