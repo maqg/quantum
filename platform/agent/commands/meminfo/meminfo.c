@@ -29,6 +29,7 @@
 #include "common.h"
 #include "oct_types.h"
 #include "event.h"
+#include "oct_json.h"
 
 #ifndef MEMINFO_TRACE
 #define MEMINFO_LOG OCT_LOG_DIR"meminfo.log"
@@ -287,12 +288,19 @@ int main(int argc, char *argv[])
 {
 	unsigned long long total;
 
+	struct json_object *mem = json_create();
+
 	if (VM_MEMORY_TOTAL(&total)) {
 		printf("got total memory error\n");
 		return 0;
 	}
 
 	printf("got total memory OK %llu\n", total / 1024 / 1024);
+
+	json_add_value(mem, "nihao", "nihao");
+	json_add_longvalue(mem, "total", total);
+
+	printf("[%s]\n", json_2string(mem));
 
 	return 0;
 }

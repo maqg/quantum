@@ -1,0 +1,15 @@
+OCT_CFLAGS :=  -DHAVE_CONFIG_H -I. -Wall -Wwrite-strings \
+	       -std=gnu99 -D_GNU_SOURCE -D_REENTRANT
+
+INCDIR = plat
+HDRS = *.h
+
+CCMODE = STATICLIB
+
+SRCS = arraylist.c debug.c json_object.c json_tokener.c json_util.c linkhash.c printbuf.c oct_json.c
+
+TARGET = oct_json
+
+LIBS =
+
+all::

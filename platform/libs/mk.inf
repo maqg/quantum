@@ -1,1 +1,1 @@
-SUBDIRS = log common regexp sysinfo
+SUBDIRS = log common json regexp sysinfo
