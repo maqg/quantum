@@ -45,6 +45,10 @@ void json_array_add_value(struct json_object *json_array, char *value);
 void json_array_add_u32value(struct json_object *json_array, unsigned int value);
 void json_array_add_boolvalue(struct json_object *json_array, int value);
 
+void PRINT_CMD_RESULT(int ret, struct json_object *obj, char *msg);
+void PRINT_CMD_RESULT_OK(struct json_object *obj);
+void PRINT_CMD_RESULT_ERR(char *msg);
+
 #ifdef __cplusplus
 }
 #endif

@@ -386,4 +386,55 @@ void json_array_add_boolvalue(struct json_object *json_array, int value)
 	json_object_array_add(json_array, json_object_new_boolean(value));
 }
 
+/*
+   "errorObj": {
+	   "errorNo": 0,
+	   "errorMsg": "执行成功",
+	   "errorLog": "",
+	   "errorMsgEN": "Command success"
+   },
+   "errorObj": {
+	   "errorNo": 5,
+	   "errorMsg": "命令执行错误",
+	   "errorLog": "",
+	   "errorMsgEN": "Execute Command Error"
+   },
+ *
+ */
+void PRINT_CMD_RESULT(int ret, struct json_object *obj, char *msg)
+{
+	struct json_object *result = json_create();
+	struct json_object *error = json_create();
 
+	json_add_u32value(error, (char *)"errorNo", (unsigned int)ret);
+	if (msg)
+		json_add_value(error, (char *)"errorLog", msg);
+	else
+		json_add_value(error, (char *)"errorLog", (char *)"");
+
+	if (!ret) {
+		json_add_value(error, (char *)"errorMsg", (char *)"执行成功");
+		json_add_value(error, (char *)"errorMsgEN", (char *)"Command success");
+	} else {
+		json_add_value(error, (char *)"errorMsg", (char *)"命令执行错误");
+		json_add_value(error, (char *)"errorMsgEN", (char *)"Execute Command Error");
+	}
+
+	json_add_json(result, (char *)"errorObj", error);
+
+	json_add_json(result, (char *)"data", obj);
+
+	printf("%s\n", json_2string(result));
+
+	json_object_put(result);
+}
+
+void PRINT_CMD_RESULT_OK(struct json_object *obj)
+{
+	return PRINT_CMD_RESULT(0, obj, NULL);
+}
+
+void PRINT_CMD_RESULT_ERR(char *msg)
+{
+	return PRINT_CMD_RESULT(6, NULL, msg);
+}

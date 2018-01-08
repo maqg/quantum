@@ -291,16 +291,19 @@ int main(int argc, char *argv[])
 	struct json_object *mem = json_create();
 
 	if (VM_MEMORY_TOTAL(&total)) {
-		printf("got total memory error\n");
+		MEMINFO_TRACE("got total memory error\n");
+		PRINT_CMD_RESULT_ERR("got total memory error");
 		return 0;
 	}
 
-	printf("got total memory OK %llu\n", total / 1024 / 1024);
+	MEMINFO_TRACE("got total memory OK %llu\n", total / 1024 / 1024);
 
 	json_add_value(mem, "nihao", "nihao");
 	json_add_longvalue(mem, "total", total);
 
-	printf("[%s]\n", json_2string(mem));
+	PRINT_CMD_RESULT_ERR("got total memory error");
+
+	PRINT_CMD_RESULT_OK(mem);
 
 	return 0;
 }
