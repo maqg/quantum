@@ -297,11 +297,16 @@ struct json_object *VM_MEMORY_INFO(void)
 	json_add_longvalue(meminfo, (char *)"used", (oct_uint64_t)((info.totalram - info.freeram) * info.mem_unit));
 	json_add_longvalue(meminfo, (char *)"shared", 0);
 
-	if (0 == info.totalram) {
-		json_add_longvalue(meminfo, (char *)"pused", 0);
-	} else {
-		json_add_doublevalue(meminfo, (char *)"pused", (info.totalram - info.freeram) / (double)info.totalram * 100);
-	}
+	json_add_longvalue(meminfo, (char *)"freeSwap", info.freeswap * info.mem_unit);
+	json_add_longvalue(meminfo, (char *)"totalSwap", info.totalswap * info.mem_unit);
+	json_add_longvalue(meminfo, (char *)"usedSwap", (info.totalswap - info.freeswap) * info.mem_unit);
+	json_add_doublevalue(meminfo, (char *)"pfreeSwap",
+			info.totalswap ? 100.0 * (info.freeswap / (double)info.totalswap) : 0.0);
+	json_add_doublevalue(meminfo, (char *)"pusedSwap", 
+			info.totalswap ? 100.0 - 100.0 * (info.freeswap / (double)info.totalswap) : 0.0);
+
+	json_add_doublevalue(meminfo, (char *)"pused", info.totalram ? \
+			(info.totalram - info.freeram) / (double)info.totalram * 100: 0.0);
 
 	// for cache
 	ret = VM_MEMORY_CACHED(&cache);
@@ -315,7 +320,8 @@ struct json_object *VM_MEMORY_INFO(void)
 	// available = free + buffer + cache
 	available = info.freeram * info.mem_unit + info.bufferram * info.mem_unit + cache;
 	json_add_longvalue(meminfo, (char *)"available", available);
-	json_add_doublevalue(meminfo, (char *)"pavailable", available / (double)info.totalram * info.mem_unit * 100);
+	json_add_doublevalue(meminfo, (char *)"pavailable", info.totalram ? \
+			available / (double)info.totalram * info.mem_unit * 100 : 0.0);
 
 	return meminfo;
 }
