@@ -3,7 +3,7 @@ OCT_CFLAGS :=  -DHAVE_CONFIG_H -I. -Wall -Wwrite-strings \
 
 INCDIR = plat
 LINKS = *.h
-HDRS = oct_json.h
+HDRS = oct_json.h json.h
 
 CCMODE = STATICLIB
 
