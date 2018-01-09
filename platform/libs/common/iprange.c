@@ -80,17 +80,17 @@ static size_t	iprange_address_length(const char *address)
  *             bits    - [IN] the number of bits in IP mask                   *
  *                                                                            *
  ******************************************************************************/
-static void	iprange_apply_mask(zbx_iprange_t *iprange, int bits)
+static void	iprange_apply_mask(oct_iprange_t *iprange, int bits)
 {
 	int	i, groups, group_bits;
 
 	switch (iprange->type)
 	{
-		case ZBX_IPRANGE_V4:
+		case OCT_IPRANGE_V4:
 			groups = 4;
 			group_bits = 8;
 			break;
-		case ZBX_IPRANGE_V6:
+		case OCT_IPRANGE_V6:
 			groups = 8;
 			group_bits = 16;
 			break;
@@ -132,13 +132,13 @@ static void	iprange_apply_mask(zbx_iprange_t *iprange, int bits)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	iprangev4_parse(zbx_iprange_t *iprange, const char *address)
+static int	iprangev4_parse(oct_iprange_t *iprange, const char *address)
 {
 	int		index, bits = -1;
 	const char	*ptr = address, *dash, *end;
 	size_t		len;
 
-	iprange->type = ZBX_IPRANGE_V4;
+	iprange->type = OCT_IPRANGE_V4;
 
 	/* ignore trailing whitespace characters */
 	len = iprange_address_length(address);
@@ -157,7 +157,7 @@ static int	iprangev4_parse(zbx_iprange_t *iprange, const char *address)
 	}
 
 	/* iterate through address numbers (bit groups) */
-	for (index = 0; ptr < end && index < ZBX_IPRANGE_GROUPS_V4; address = ptr + 1)
+	for (index = 0; ptr < end && index < OCT_IPRANGE_GROUPS_V4; address = ptr + 1)
 	{
 		if (NULL == (ptr = strchr(address, '.')))
 			ptr = end;
@@ -202,7 +202,7 @@ static int	iprangev4_parse(zbx_iprange_t *iprange, const char *address)
 	}
 
 	/* IPv4 address will always have 4 groups */
-	if (ZBX_IPRANGE_GROUPS_V4 != index)
+	if (OCT_IPRANGE_GROUPS_V4 != index)
 		return FAIL;
 
 	if (-1 != bits)
@@ -226,13 +226,13 @@ static int	iprangev4_parse(zbx_iprange_t *iprange, const char *address)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	iprangev6_parse(zbx_iprange_t *iprange, const char *address)
+static int	iprangev6_parse(oct_iprange_t *iprange, const char *address)
 {
 	int		index, fill = -1, bits = -1, target;
 	const char	*ptr = address, *dash, *end;
 	size_t		len;
 
-	iprange->type = ZBX_IPRANGE_V6;
+	iprange->type = OCT_IPRANGE_V6;
 
 	/* ignore trailing whitespace characters */
 	len = iprange_address_length(address);
@@ -251,7 +251,7 @@ static int	iprangev6_parse(zbx_iprange_t *iprange, const char *address)
 	}
 
 	/* iterate through address numbers (bit groups) */
-	for (index = 0; ptr < end && index < ZBX_IPRANGE_GROUPS_V6; address = ptr + 1)
+	for (index = 0; ptr < end && index < OCT_IPRANGE_GROUPS_V6; address = ptr + 1)
 	{
 		if (NULL == (ptr = strchr(address, ':')))
 			ptr = end;
@@ -316,11 +316,11 @@ check_fill:
 	}
 
 	/* fail if the address contains 9+ groups */
-	if (ZBX_IPRANGE_GROUPS_V6 < index)
+	if (OCT_IPRANGE_GROUPS_V6 < index)
 		return FAIL;
 
 	/* expand the :: construct to the required number of zeroes */
-	if (ZBX_IPRANGE_GROUPS_V6 > index)
+	if (OCT_IPRANGE_GROUPS_V6 > index)
 	{
 		/* fail if the address contains less than 8 groups and no :: construct was used */
 		if (-1 == fill)
@@ -362,7 +362,7 @@ check_fill:
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	iprange_parse(zbx_iprange_t *iprange, const char *address)
+int	iprange_parse(oct_iprange_t *iprange, const char *address)
 {
 	/* ignore leading whitespace characters */
 	while (SUCCEED == iprange_is_whitespace_character(*address))
@@ -387,17 +387,17 @@ int	iprange_parse(zbx_iprange_t *iprange, const char *address)
  * Comments: The IP address is returned as a number array.                    *
  *                                                                            *
  ******************************************************************************/
-void	iprange_first(const zbx_iprange_t *iprange, int *address)
+void	iprange_first(const oct_iprange_t *iprange, int *address)
 {
 	int	i, groups;
 
-	groups = (ZBX_IPRANGE_V4 == iprange->type ? 4 : 8);
+	groups = (OCT_IPRANGE_V4 == iprange->type ? 4 : 8);
 
 	for (i = 0; i < groups; i++)
 		address[i] = iprange->range[i].from;
 
 	/* exclude network address if the IPv4 range was specified with network mask */
-	if (ZBX_IPRANGE_V4 == iprange->type && 0 != iprange->mask)
+	if (OCT_IPRANGE_V4 == iprange->type && 0 != iprange->mask)
 		address[groups - 1]++;
 }
 
@@ -418,11 +418,11 @@ void	iprange_first(const zbx_iprange_t *iprange, int *address)
  * Comments: The IP address is returned as a number array.                    *
  *                                                                            *
  ******************************************************************************/
-int	iprange_next(const zbx_iprange_t *iprange, int *address)
+int	iprange_next(const oct_iprange_t *iprange, int *address)
 {
 	int	i, groups;
 
-	groups = (ZBX_IPRANGE_V4 == iprange->type ? 4 : 8);
+	groups = (OCT_IPRANGE_V4 == iprange->type ? 4 : 8);
 
 	for (i = groups - 1; i >= 0; i--)
 	{
@@ -431,7 +431,7 @@ int	iprange_next(const zbx_iprange_t *iprange, int *address)
 			address[i]++;
 
 			/* exclude broadcast address if the IPv4 range was specified with network mask */
-			if (ZBX_IPRANGE_V4 == iprange->type && 0 != iprange->mask)
+			if (OCT_IPRANGE_V4 == iprange->type && 0 != iprange->mask)
 			{
 				for (i = groups - 1; i >= 0; i--)
 				{
@@ -466,11 +466,11 @@ int	iprange_next(const zbx_iprange_t *iprange, int *address)
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-int	iprange_validate(const zbx_iprange_t *iprange, const int *address)
+int	iprange_validate(const oct_iprange_t *iprange, const int *address)
 {
 	int	i, groups;
 
-	groups = (ZBX_IPRANGE_V4 == iprange->type ? 4 : 8);
+	groups = (OCT_IPRANGE_V4 == iprange->type ? 4 : 8);
 
 	for (i = 0; i < groups; i++)
 	{
@@ -490,29 +490,29 @@ int	iprange_validate(const zbx_iprange_t *iprange, const int *address)
  * Parameters: iprange - [IN] the IP range                                    *
  *                                                                            *
  * Return value: The number of addresses covered by the range or              *
- *               ZBX_MAX_UINT64 if this number exceeds 64 bit unsigned        *
+ *               OCT_MAX_UINT64 if this number exceeds 64 bit unsigned        *
  *               integer.                                                     *
  *                                                                            *
  ******************************************************************************/
-zbx_uint64_t	iprange_volume(const zbx_iprange_t *iprange)
+oct_uint64_t	iprange_volume(const oct_iprange_t *iprange)
 {
 	int		i, groups;
-	zbx_uint64_t	n, volume = 1;
+	oct_uint64_t	n, volume = 1;
 
-	groups = (ZBX_IPRANGE_V4 == iprange->type ? 4 : 8);
+	groups = (OCT_IPRANGE_V4 == iprange->type ? 4 : 8);
 
 	for (i = 0; i < groups; i++)
 	{
 		n = iprange->range[i].to - iprange->range[i].from + 1;
 
-		if (ZBX_MAX_UINT64 / n < volume)
-			return ZBX_MAX_UINT64;
+		if (OCT_MAX_UINT64 / n < volume)
+			return OCT_MAX_UINT64;
 
 		volume *= n;
 	}
 
 	/* exclude network and broadcast addresses if the IPv4 range was specified with network mask */
-	if (ZBX_IPRANGE_V4 == iprange->type && 0 != iprange->mask)
+	if (OCT_IPRANGE_V4 == iprange->type && 0 != iprange->mask)
 		volume -= 2;
 
 	return volume;

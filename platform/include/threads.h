@@ -17,58 +17,58 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_THREADS_H
-#define ZABBIX_THREADS_H
+#ifndef OCT_THREADS_H
+#define OCT_THREADS_H
 
 #include "common.h"
 
 #if defined(_WINDOWS)
-	/* the ZBXEndThread function is implemented in service.c file */
-	void	CALLBACK ZBXEndThread(ULONG_PTR dwParam);
+	/* the OCTEndThread function is implemented in service.c file */
+	void	CALLBACK OCTEndThread(ULONG_PTR dwParam);
 
-	#define ZBX_THREAD_ERROR	0
+	#define OCT_THREAD_ERROR	0
 
-	#define ZBX_THREAD_HANDLE	HANDLE
-	#define ZBX_THREAD_HANDLE_NULL	NULL
+	#define OCT_THREAD_HANDLE	HANDLE
+	#define OCT_THREAD_HANDLE_NULL	NULL
 
-	#define ZBX_THREAD_ENTRY_POINTER(pointer_name) \
+	#define OCT_THREAD_ENTRY_POINTER(pointer_name) \
 		unsigned (__stdcall *pointer_name)(void *)
 
-	#define ZBX_THREAD_ENTRY(entry_name, arg_name)	\
+	#define OCT_THREAD_ENTRY(entry_name, arg_name)	\
 		unsigned __stdcall entry_name(void *arg_name)
 
-	#define zbx_thread_exit(status) \
+	#define oct_thread_exit(status) \
 		_endthreadex((unsigned int)(status)); \
 		return ((unsigned)(status))
 
-	#define zbx_sleep(sec) SleepEx(((DWORD)(sec)) * ((DWORD)1000), TRUE)
+	#define oct_sleep(sec) SleepEx(((DWORD)(sec)) * ((DWORD)1000), TRUE)
 
-	#define zbx_thread_kill(h) QueueUserAPC(ZBXEndThread, h, 0);
+	#define oct_thread_kill(h) QueueUserAPC(OCTEndThread, h, 0);
 
 #else	/* not _WINDOWS */
 
-	int	zbx_fork(void);
-	int	zbx_child_fork(void);
+	int	oct_fork(void);
+	int	oct_child_fork(void);
 
-	#define ZBX_THREAD_ERROR	-1
+	#define OCT_THREAD_ERROR	-1
 
-	#define ZBX_THREAD_HANDLE	pid_t
-	#define ZBX_THREAD_HANDLE_NULL	0
+	#define OCT_THREAD_HANDLE	pid_t
+	#define OCT_THREAD_HANDLE_NULL	0
 
-	#define ZBX_THREAD_ENTRY_POINTER(pointer_name) \
+	#define OCT_THREAD_ENTRY_POINTER(pointer_name) \
 		unsigned (* pointer_name)(void *)
 
-	#define ZBX_THREAD_ENTRY(entry_name, arg_name)	\
+	#define OCT_THREAD_ENTRY(entry_name, arg_name)	\
 		unsigned entry_name(void *arg_name)
 
-	/* Calling _exit() to terminate child process immediately is important. See ZBX-5732 for details. */
-	#define zbx_thread_exit(status) \
+	/* Calling _exit() to terminate child process immediately is important. See OCT-5732 for details. */
+	#define oct_thread_exit(status) \
 		_exit((int)(status)); \
 		return ((unsigned)(status))
 
-	#define zbx_sleep(sec) sleep((sec))
+	#define oct_sleep(sec) sleep((sec))
 
-	#define zbx_thread_kill(h) kill(h, SIGTERM);
+	#define oct_thread_kill(h) kill(h, SIGTERM);
 
 #endif	/* _WINDOWS */
 
@@ -79,14 +79,14 @@ typedef struct
 	unsigned char	process_type;
 	void		*args;
 #ifdef _WINDOWS
-	ZBX_THREAD_ENTRY_POINTER(entry);
+	OCT_THREAD_ENTRY_POINTER(entry);
 #endif
 }
-zbx_thread_args_t;
+oct_thread_args_t;
 
-ZBX_THREAD_HANDLE	zbx_thread_start(ZBX_THREAD_ENTRY_POINTER(handler), zbx_thread_args_t *thread_args);
-int			zbx_thread_wait(ZBX_THREAD_HANDLE thread);
-/* zbx_thread_exit(status) -- declared as define !!! */
-long int		zbx_get_thread_id(void);
+OCT_THREAD_HANDLE	oct_thread_start(OCT_THREAD_ENTRY_POINTER(handler), oct_thread_args_t *thread_args);
+int			oct_thread_wait(OCT_THREAD_HANDLE thread);
+/* oct_thread_exit(status) -- declared as define !!! */
+long int		oct_get_thread_id(void);
 
-#endif	/* ZABBIX_THREADS_H */
+#endif	/* OCT_THREADS_H */

@@ -2,7 +2,8 @@ OCT_CFLAGS :=  -DHAVE_CONFIG_H -I. -Wall -Wwrite-strings \
 	       -std=gnu99 -D_GNU_SOURCE -D_REENTRANT
 
 INCDIR = plat
-HDRS = *.h
+LINKS = *.h
+HDRS = oct_json.h
 
 CCMODE = STATICLIB
 

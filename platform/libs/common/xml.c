@@ -19,7 +19,7 @@
 
 #include "common.h"
 
-static char	data_static[ZBX_MAX_B64_LEN];
+static char	data_static[OCT_MAX_B64_LEN];
 
 /******************************************************************************
  *                                                                            *
@@ -33,11 +33,11 @@ int	xml_get_data_dyn(const char *xml, const char *tag, char **data)
 
 	sz = sizeof(data_static);
 
-	len = zbx_snprintf(data_static, sz, "<%s>", tag);
+	len = oct_snprintf(data_static, sz, "<%s>", tag);
 	if (NULL == (start = strstr(xml, data_static)))
 		return FAIL;
 
-	zbx_snprintf(data_static, sz, "</%s>", tag);
+	oct_snprintf(data_static, sz, "</%s>", tag);
 	if (NULL == (end = strstr(xml, data_static)))
 		return FAIL;
 
@@ -48,11 +48,11 @@ int	xml_get_data_dyn(const char *xml, const char *tag, char **data)
 	len = end - start;
 
 	if (len > sz - 1)
-		*data = (char *)zbx_malloc(*data, len + 1);
+		*data = (char *)oct_malloc(*data, len + 1);
 	else
 		*data = data_static;
 
-	zbx_strlcpy(*data, start, len + 1);
+	oct_strlcpy(*data, start, len + 1);
 
 	return SUCCEED;
 }
@@ -62,7 +62,7 @@ void	xml_free_data_dyn(char **data)
 	if (*data == data_static)
 		*data = NULL;
 	else
-		zbx_free(*data);
+		oct_free(*data);
 }
 
 /******************************************************************************
@@ -86,7 +86,7 @@ char	*xml_escape_dyn(const char *data)
 	int		size = 0;
 
 	if (NULL == data)
-		return zbx_strdup(NULL, "");
+		return oct_strdup(NULL, "");
 
 	for (ptr_in = data; '\0' != *ptr_in; ptr_in++)
 	{
@@ -109,7 +109,7 @@ char	*xml_escape_dyn(const char *data)
 	}
 	size++;
 
-	out = (char *)zbx_malloc(NULL, size);
+	out = (char *)oct_malloc(NULL, size);
 
 	for (ptr_out = out, ptr_in = data; '\0' != *ptr_in; ptr_in++)
 	{

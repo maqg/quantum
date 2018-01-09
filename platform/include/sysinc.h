@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_SYSINC_H
-#define ZABBIX_SYSINC_H
+#ifndef OCT_SYSINC_H
+#define OCT_SYSINC_H
 
 #include "config.h"
 
@@ -392,7 +392,7 @@
 #	if 0x071400 <= LIBCURL_VERSION_NUM	/* version 7.20.0 */
 #		define HAVE_SMTP_AUTHENTICATION	1
 #	endif
-#	define ZBX_CURLOPT_MAXREDIRS	10L
+#	define OCT_CURLOPT_MAXREDIRS	10L
 #endif
 
 /* Required for advanced sigaction */

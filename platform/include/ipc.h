@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_IPC_H
-#define ZABBIX_IPC_H
+#ifndef OCT_IPC_H
+#define OCT_IPC_H
 
 #if defined(_WINDOWS)
 #	error "This module allowed only for Unix OS"
@@ -26,13 +26,13 @@
 
 #include "mutexs.h"
 
-#define ZBX_NONEXISTENT_SHMID		(-1)
+#define OCT_NONEXISTENT_SHMID		(-1)
 
-int	zbx_shm_create(size_t size);
-int	zbx_shm_destroy(int shmid);
+int	oct_shm_create(size_t size);
+int	oct_shm_destroy(int shmid);
 
 /* data copying callback function prototype */
-typedef void (*zbx_shm_copy_func_t)(void *dst, size_t size_dst, const void *src);
+typedef void (*oct_shm_copy_func_t)(void *dst, size_t size_dst, const void *src);
 
 /* dynamic shared memory data structure */
 typedef struct
@@ -44,11 +44,11 @@ typedef struct
 	size_t			size;
 
 	/* callback function to copy data after shared memory reallocation */
-	zbx_shm_copy_func_t	copy_func;
+	oct_shm_copy_func_t	copy_func;
 
-	ZBX_MUTEX		lock;
+	OCT_MUTEX		lock;
 }
-zbx_dshm_t;
+oct_dshm_t;
 
 /* local process reference to dynamic shared memory data */
 typedef struct
@@ -59,18 +59,18 @@ typedef struct
 	/* shared memory base address */
 	void	*addr;
 }
-zbx_dshm_ref_t;
+oct_dshm_ref_t;
 
-int	zbx_dshm_create(zbx_dshm_t *shm, size_t shm_size, ZBX_MUTEX_NAME mutex,
-		zbx_shm_copy_func_t copy_func, char **errmsg);
+int	oct_dshm_create(oct_dshm_t *shm, size_t shm_size, OCT_MUTEX_NAME mutex,
+		oct_shm_copy_func_t copy_func, char **errmsg);
 
-int	zbx_dshm_destroy(zbx_dshm_t *shm, char **errmsg);
+int	oct_dshm_destroy(oct_dshm_t *shm, char **errmsg);
 
-int	zbx_dshm_realloc(zbx_dshm_t *shm, size_t size, char **errmsg);
+int	oct_dshm_realloc(oct_dshm_t *shm, size_t size, char **errmsg);
 
-int	zbx_dshm_validate_ref(const zbx_dshm_t *shm, zbx_dshm_ref_t *shm_ref, char **errmsg);
+int	oct_dshm_validate_ref(const oct_dshm_t *shm, oct_dshm_ref_t *shm_ref, char **errmsg);
 
-void	zbx_dshm_lock(zbx_dshm_t *shm);
-void	zbx_dshm_unlock(zbx_dshm_t *shm);
+void	oct_dshm_lock(oct_dshm_t *shm);
+void	oct_dshm_unlock(oct_dshm_t *shm);
 
 #endif

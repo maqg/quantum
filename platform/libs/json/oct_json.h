@@ -28,6 +28,7 @@ void json_add_u32value(struct json_object *json, char *key, unsigned int value);
 void json_add_boolvalue(struct json_object *json, char *key, int value);
 void json_add_json(struct json_object *json, char *key, struct json_object * value);
 void json_add_longvalue(struct json_object *json, char *key, long int value);
+void json_add_doublevalue(struct json_object *json, char *key, double value);
 long int json_get_longvalue(struct json_object *json, char *inkey);
 struct json_object *json_new(char *key, char *val);
 struct json_object *json_new_u32(char *key, unsigned int val);

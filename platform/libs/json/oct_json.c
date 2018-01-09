@@ -265,6 +265,14 @@ void json_add_longvalue(struct json_object *json, char *key, long int value)
 	json_object_object_add(json, key, json_object_new_int64(value));
 }
 
+void json_add_doublevalue(struct json_object *json, char *key, double value)
+{
+	if (!json || !key)
+		return ;
+
+	json_object_object_add(json, key, json_object_new_double(value));
+}
+
 /*
 * ---------------------------------------------------------------------
 *

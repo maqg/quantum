@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_PROC_H
-#define ZABBIX_PROC_H
+#ifndef OCT_PROC_H
+#define OCT_PROC_H
 
 #include "oct_types.h"
 #include "event.h"
@@ -32,6 +32,6 @@
 #endif
 
 
-int	byte_value_from_proc_file(FILE *f, const char *label, const char *guard, zbx_uint64_t *bytes);
+int	byte_value_from_proc_file(FILE *f, const char *label, const char *guard, oct_uint64_t *bytes);
 
 #endif

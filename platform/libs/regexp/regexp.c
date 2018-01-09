@@ -22,7 +22,7 @@
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_regexp_compile                                               *
+ * Function: oct_regexp_compile                                               *
  *                                                                            *
  * Purpose: compiles a regular expression                                     *
  *                                                                            *
@@ -40,7 +40,7 @@
  * Return value: SUCCEED or FAIL                                              *
  *                                                                            *
  ******************************************************************************/
-int	zbx_regexp_compile(const char *regex_txt, int flags, regex_t *regex_compiled, char **error)
+int	oct_regexp_compile(const char *regex_txt, int flags, regex_t *regex_compiled, char **error)
 {
 	int	re_error = 0;
 	regex_t	re = {0};
@@ -62,7 +62,7 @@ int	zbx_regexp_compile(const char *regex_txt, int flags, regex_t *regex_compiled
 		char	buf[MAX_STRING_LEN];
 
 		regerror(re_error, &re, buf, sizeof(buf));
-		*error = zbx_strdup(*error, buf);
+		*error = oct_strdup(*error, buf);
 	}
 #ifdef _WINDOWS
 	/* the Windows gnuregex implementation does not correctly clean up */
@@ -74,7 +74,7 @@ int	zbx_regexp_compile(const char *regex_txt, int flags, regex_t *regex_compiled
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_regexp_exec                                                  *
+ * Function: oct_regexp_exec                                                  *
  *                                                                            *
  * Purpose: wrapper for regexec, searches for a given pattern, specified by   *
  *          regex, in the string                                              *
@@ -91,14 +91,14 @@ int	zbx_regexp_compile(const char *regex_txt, int flags, regex_t *regex_compiled
  *               nonzero - no match                                           *
  *                                                                            *
  ******************************************************************************/
-int	zbx_regexp_exec(const char *string, const regex_t *regex_compiled, int flags, size_t count, regmatch_t *matches)
+int	oct_regexp_exec(const char *string, const regex_t *regex_compiled, int flags, size_t count, regmatch_t *matches)
 {
 	return regexec(regex_compiled, string, count, matches, flags);
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_regexp_free                                                  *
+ * Function: oct_regexp_free                                                  *
  *                                                                            *
  * Purpose: wrapper for regfree                                               *
  *                                                                            *
@@ -108,14 +108,14 @@ int	zbx_regexp_exec(const char *string, const regex_t *regex_compiled, int flags
  *           'regex_compiled' buffer, not the buffer itself.                  *
  *                                                                            *
  ******************************************************************************/
-void	zbx_regexp_free(regex_t *regex_compiled)
+void	oct_regexp_free(regex_t *regex_compiled)
 {
 	regfree(regex_compiled);
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_regexp_match_precompiled                                     *
+ * Function: oct_regexp_match_precompiled                                     *
  *                                                                            *
  * Purpose: checks if string matches a precompiled regular expression without *
  *          returning matching groups                                         *
@@ -130,16 +130,16 @@ void	zbx_regexp_free(regex_t *regex_compiled)
  *           be matched against the same regular expression                   *
  *                                                                            *
  ******************************************************************************/
-int     zbx_regexp_match_precompiled(const char *string, const regex_t *regex)
+int     oct_regexp_match_precompiled(const char *string, const regex_t *regex)
 {
-	return zbx_regexp_exec(string, regex, 0, (size_t)0, NULL);
+	return oct_regexp_exec(string, regex, 0, (size_t)0, NULL);
 }
 
-static char	*zbx_regexp(const char *string, const char *pattern, int *len, int flags)
+static char	*oct_regexp(const char *string, const char *pattern, int *len, int flags)
 {
-	ZBX_THREAD_LOCAL static char	*old_pattern = NULL;
-	ZBX_THREAD_LOCAL static int	old_flags;
-	ZBX_THREAD_LOCAL static regex_t	re;
+	OCT_THREAD_LOCAL static char	*old_pattern = NULL;
+	OCT_THREAD_LOCAL static int	old_flags;
+	OCT_THREAD_LOCAL static regex_t	re;
 
 	char				*c = NULL;
 	regmatch_t			match;
@@ -162,7 +162,7 @@ static char	*zbx_regexp(const char *string, const char *pattern, int *len, int f
 compile:
 	if (0 == regcomp(&re, pattern, flags))
 	{
-		old_pattern = zbx_strdup(old_pattern, pattern);
+		old_pattern = oct_strdup(old_pattern, pattern);
 		old_flags = flags;
 	}
 	else
@@ -172,7 +172,7 @@ compile:
 		/* allocated memory after regcomp() failure                        */
 		regfree(&re);
 #endif
-		zbx_free(old_pattern);
+		oct_free(old_pattern);
 		goto out;
 	}
 execute:
@@ -191,14 +191,14 @@ out:
 	return c;
 }
 
-char	*zbx_regexp_match(const char *string, const char *pattern, int *len)
+char	*oct_regexp_match(const char *string, const char *pattern, int *len)
 {
-	return zbx_regexp(string, pattern, len, REG_EXTENDED | REG_NEWLINE);
+	return oct_regexp(string, pattern, len, REG_EXTENDED | REG_NEWLINE);
 }
 
-char	*zbx_iregexp_match(const char *string, const char *pattern, int *len)
+char	*oct_iregexp_match(const char *string, const char *pattern, int *len)
 {
-	return zbx_regexp(string, pattern, len, REG_EXTENDED | REG_ICASE | REG_NEWLINE);
+	return oct_regexp(string, pattern, len, REG_EXTENDED | REG_ICASE | REG_NEWLINE);
 }
 
 /*********************************************************************************
@@ -228,14 +228,14 @@ static char	*regexp_sub_replace(const char *text, const char *output_template, r
 	size_t		size = 0, offset = 0, group_index;
 
 	if (NULL == output_template || '\0' == *output_template)
-		return zbx_strdup(NULL, text);
+		return oct_strdup(NULL, text);
 
 	while (NULL != (pgroup = strchr(pstart, '\\')))
 	{
 		switch (*(++pgroup))
 		{
 			case '\\':
-				zbx_strncpy_alloc(&ptr, &size, &offset, pstart, pgroup - pstart);
+				oct_strncpy_alloc(&ptr, &size, &offset, pstart, pgroup - pstart);
 				pstart = pgroup + 1;
 				continue;
 
@@ -249,11 +249,11 @@ static char	*regexp_sub_replace(const char *text, const char *output_template, r
 			case '7':
 			case '8':
 			case '9':
-				zbx_strncpy_alloc(&ptr, &size, &offset, pstart, pgroup - pstart - 1);
+				oct_strncpy_alloc(&ptr, &size, &offset, pstart, pgroup - pstart - 1);
 				group_index = *pgroup - '0';
 				if (group_index < nmatch && -1 != match[group_index].rm_so)
 				{
-					zbx_strncpy_alloc(&ptr, &size, &offset, text + match[group_index].rm_so,
+					oct_strncpy_alloc(&ptr, &size, &offset, text + match[group_index].rm_so,
 							match[group_index].rm_eo - match[group_index].rm_so);
 				}
 				pstart = pgroup + 1;
@@ -264,24 +264,24 @@ static char	*regexp_sub_replace(const char *text, const char *output_template, r
 				/* if the regular expression pattern contains no groups             */
 				if (-1 == match[1].rm_so)
 				{
-					zbx_free(ptr);
+					oct_free(ptr);
 					goto out;
 				}
 
-				zbx_strncpy_alloc(&ptr, &size, &offset, text + match[1].rm_so,
+				oct_strncpy_alloc(&ptr, &size, &offset, text + match[1].rm_so,
 						match[1].rm_eo - match[1].rm_so);
 
 				pstart = pgroup + 1;
 				continue;
 
 			default:
-				zbx_strncpy_alloc(&ptr, &size, &offset, pstart, pgroup - pstart);
+				oct_strncpy_alloc(&ptr, &size, &offset, pstart, pgroup - pstart);
 				pstart = pgroup;
 		}
 	}
 
 	if ('\0' != *pstart)
-		zbx_strcpy_alloc(&ptr, &size, &offset, pstart);
+		oct_strcpy_alloc(&ptr, &size, &offset, pstart);
 out:
 	return ptr;
 }
@@ -315,15 +315,15 @@ out:
  *********************************************************************************/
 static int	regexp_sub(const char *string, const char *pattern, const char *output_template, int flags, char **out)
 {
-	ZBX_THREAD_LOCAL static char	*old_pattern = NULL;
-	ZBX_THREAD_LOCAL static int	old_flags;
-	ZBX_THREAD_LOCAL static regex_t	re;
+	OCT_THREAD_LOCAL static char	*old_pattern = NULL;
+	OCT_THREAD_LOCAL static int	old_flags;
+	OCT_THREAD_LOCAL static regex_t	re;
 
 	regmatch_t			match[10];	/* up to 10 capture groups in regexp */
 
 	if (NULL == string)
 	{
-		zbx_free(*out);
+		oct_free(*out);
 		return SUCCEED;
 	}
 
@@ -342,7 +342,7 @@ static int	regexp_sub(const char *string, const char *pattern, const char *outpu
 compile:
 	if (0 == regcomp(&re, pattern, flags))
 	{
-		old_pattern = zbx_strdup(old_pattern, pattern);
+		old_pattern = oct_strdup(old_pattern, pattern);
 		old_flags = flags;
 	}
 	else
@@ -352,11 +352,11 @@ compile:
 		/* allocated memory after regcomp() failure                        */
 		regfree(&re);
 #endif
-		zbx_free(old_pattern);
+		oct_free(old_pattern);
 		return FAIL;
 	}
 execute:
-	zbx_free(*out);
+	oct_free(*out);
 
 	if (0 == regexec(&re, string, ARRSIZE(match), match, 0))
 		*out = regexp_sub_replace(string, output_template, match, ARRSIZE(match));
@@ -366,7 +366,7 @@ execute:
 
 /*********************************************************************************
  *                                                                               *
- * Function: zbx_regexp_sub                                                      *
+ * Function: oct_regexp_sub                                                      *
  *                                                                               *
  * Purpose: Test if a string matches the specified regular expression. If yes    *
  *          then create a return value by substituting '\<n>' sequences in       *
@@ -388,40 +388,40 @@ execute:
  * Comments: This function performs case sensitive match                         *
  *                                                                               *
  *********************************************************************************/
-int	zbx_regexp_sub(const char *string, const char *pattern, const char *output_template, char **out)
+int	oct_regexp_sub(const char *string, const char *pattern, const char *output_template, char **out)
 {
 	return regexp_sub(string, pattern, output_template, REG_EXTENDED | REG_NEWLINE, out);
 }
 
 /*********************************************************************************
  *                                                                               *
- * Function: zbx_mregexp_sub                                                     *
+ * Function: oct_mregexp_sub                                                     *
  *                                                                               *
- * Purpose: This function is similar to zbx_regexp_sub() with exception that     *
+ * Purpose: This function is similar to oct_regexp_sub() with exception that     *
  *          multiline matches are accepted.                                      *
  *                                                                               *
  *********************************************************************************/
-int	zbx_mregexp_sub(const char *string, const char *pattern, const char *output_template, char **out)
+int	oct_mregexp_sub(const char *string, const char *pattern, const char *output_template, char **out)
 {
 	return regexp_sub(string, pattern, output_template, REG_EXTENDED, out);
 }
 
 /*********************************************************************************
  *                                                                               *
- * Function: zbx_iregexp_sub                                                     *
+ * Function: oct_iregexp_sub                                                     *
  *                                                                               *
- * Purpose: This function is similar to zbx_regexp_sub() with exception that     *
+ * Purpose: This function is similar to oct_regexp_sub() with exception that     *
  *          case insensitive matches are accepted.                               *
  *                                                                               *
  *********************************************************************************/
-int	zbx_iregexp_sub(const char *string, const char *pattern, const char *output_template, char **out)
+int	oct_iregexp_sub(const char *string, const char *pattern, const char *output_template, char **out)
 {
 	return regexp_sub(string, pattern, output_template, REG_EXTENDED | REG_ICASE, out);
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_regexp_clean_expressions                                     *
+ * Function: oct_regexp_clean_expressions                                     *
  *                                                                            *
  * Purpose: frees expression data retrieved by DCget_expressions function or  *
  *          prepared with add_regexp_ex() function calls                      *
@@ -429,38 +429,38 @@ int	zbx_iregexp_sub(const char *string, const char *pattern, const char *output_
  * Parameters: expressions  - [IN] a vector of expression data pointers       *
  *                                                                            *
  ******************************************************************************/
-void	zbx_regexp_clean_expressions(zbx_vector_ptr_t *expressions)
+void	oct_regexp_clean_expressions(oct_vector_ptr_t *expressions)
 {
 	int	i;
 
 	for (i = 0; i < expressions->values_num; i++)
 	{
-		zbx_expression_t	*regexp = (zbx_expression_t *)expressions->values[i];
+		oct_expression_t	*regexp = (oct_expression_t *)expressions->values[i];
 
-		zbx_free(regexp->name);
-		zbx_free(regexp->expression);
-		zbx_free(regexp);
+		oct_free(regexp->name);
+		oct_free(regexp->expression);
+		oct_free(regexp);
 	}
 
 	// TBD
-	//zbx_vector_ptr_clear(expressions);
+	//oct_vector_ptr_clear(expressions);
 }
 
-void	add_regexp_ex(zbx_vector_ptr_t *regexps, const char *name, const char *expression, int expression_type,
+void	add_regexp_ex(oct_vector_ptr_t *regexps, const char *name, const char *expression, int expression_type,
 		char exp_delimiter, int case_sensitive)
 {
-	zbx_expression_t	*regexp;
+	oct_expression_t	*regexp;
 
-	regexp = (zbx_expression_t *)zbx_malloc(NULL, sizeof(zbx_expression_t));
+	regexp = (oct_expression_t *)oct_malloc(NULL, sizeof(oct_expression_t));
 
-	regexp->name = zbx_strdup(NULL, name);
-	regexp->expression = zbx_strdup(NULL, expression);
+	regexp->name = oct_strdup(NULL, name);
+	regexp->expression = oct_strdup(NULL, expression);
 
 	regexp->expression_type = expression_type;
 	regexp->exp_delimiter = exp_delimiter;
 	regexp->case_sensitive = case_sensitive;
 
-	//zbx_vector_ptr_append(regexps, regexp);
+	//oct_vector_ptr_append(regexps, regexp);
 }
 
 /**********************************************************************************
@@ -473,8 +473,8 @@ void	add_regexp_ex(zbx_vector_ptr_t *regexps, const char *name, const char *expr
  *                                                                                *
  * Parameters: string          - [IN] the string to check                         *
  *             pattern         - [IN] the regular expression                      *
- *             case_sensitive  - [IN] ZBX_IGNORE_CASE - case insensitive match.   *
- *                                    ZBX_CASE_SENSITIVE - case sensitive match.  *
+ *             case_sensitive  - [IN] OCT_IGNORE_CASE - case insensitive match.   *
+ *                                    OCT_CASE_SENSITIVE - case sensitive match.  *
  *             output_template - [IN] the output string template. The output      *
  *                                    string is constructed from the template by  *
  *                                    replacing \<n> sequences with the captured  *
@@ -486,9 +486,9 @@ void	add_regexp_ex(zbx_vector_ptr_t *regexps, const char *name, const char *expr
  *                                    (substitution) is stored.                   *
  *                                    Specify NULL to skip output value creation. *
  *                                                                                *
- * Return value: ZBX_REGEXP_MATCH    - the string matches the specified regular   *
+ * Return value: OCT_REGEXP_MATCH    - the string matches the specified regular   *
  *                                     expression                                 *
- *               ZBX_REGEXP_NO_MATCH - the string does not match the regular      *
+ *               OCT_REGEXP_NO_MATCH - the string does not match the regular      *
  *                                     expression                                 *
  *               FAIL                - the string is NULL or the specified        *
  *                                     regular expression is invalid              *
@@ -499,24 +499,24 @@ static int	regexp_match_ex_regsub(const char *string, const char *pattern, int c
 {
 	int	regexp_flags = REG_EXTENDED | REG_NEWLINE, ret;
 
-	if (ZBX_IGNORE_CASE == case_sensitive)
+	if (OCT_IGNORE_CASE == case_sensitive)
 		regexp_flags |= REG_ICASE;
 
 	if (NULL == output)
 	{
-		if (NULL == zbx_regexp(string, pattern, &ret, regexp_flags))
+		if (NULL == oct_regexp(string, pattern, &ret, regexp_flags))
 		{
 			if (FAIL != ret)
-				ret = ZBX_REGEXP_NO_MATCH;
+				ret = OCT_REGEXP_NO_MATCH;
 		}
 		else
-			ret = ZBX_REGEXP_MATCH;
+			ret = OCT_REGEXP_MATCH;
 	}
 	else
 	{
 		if (SUCCEED == regexp_sub(string, pattern, output_template, regexp_flags, output))
 		{
-			ret = (NULL != *output ? ZBX_REGEXP_MATCH : ZBX_REGEXP_NO_MATCH);
+			ret = (NULL != *output ? OCT_REGEXP_MATCH : OCT_REGEXP_NO_MATCH);
 		}
 		else
 			ret = FAIL;
@@ -534,11 +534,11 @@ static int	regexp_match_ex_regsub(const char *string, const char *pattern, int c
  *                                                                                *
  * Parameters: string          - [IN] the string to check                         *
  *             pattern         - [IN] the substring to search                     *
- *             case_sensitive  - [IN] ZBX_IGNORE_CASE - case insensitive search   *
- *                                    ZBX_CASE_SENSITIVE - case sensitive search  *
+ *             case_sensitive  - [IN] OCT_IGNORE_CASE - case insensitive search   *
+ *                                    OCT_CASE_SENSITIVE - case sensitive search  *
  *                                                                                *
- * Return value: ZBX_REGEXP_MATCH    - string contains the specified substring    *
- *               ZBX_REGEXP_NO_MATCH - string does not contain the substring      *
+ * Return value: OCT_REGEXP_MATCH    - string contains the specified substring    *
+ *               OCT_REGEXP_NO_MATCH - string does not contain the substring      *
  *                                                                                *
  **********************************************************************************/
 static int	regexp_match_ex_substring(const char *string, const char *pattern, int case_sensitive)
@@ -547,15 +547,15 @@ static int	regexp_match_ex_substring(const char *string, const char *pattern, in
 
 	switch (case_sensitive)
 	{
-		case ZBX_CASE_SENSITIVE:
+		case OCT_CASE_SENSITIVE:
 			ptr = strstr(string, pattern);
 			break;
-		case ZBX_IGNORE_CASE:
-			ptr = zbx_strcasestr(string, pattern);
+		case OCT_IGNORE_CASE:
+			ptr = oct_strcasestr(string, pattern);
 			break;
 	}
 
-	return (NULL != ptr ? ZBX_REGEXP_MATCH : ZBX_REGEXP_NO_MATCH);
+	return (NULL != ptr ? OCT_REGEXP_MATCH : OCT_REGEXP_NO_MATCH);
 }
 
 /**********************************************************************************
@@ -567,22 +567,22 @@ static int	regexp_match_ex_substring(const char *string, const char *pattern, in
  *                                                                                *
  * Parameters: string          - [IN] the string to check                         *
  *             pattern         - [IN] the substring list                          *
- *             case_sensitive  - [IN] ZBX_IGNORE_CASE - case insensitive search   *
- *                                    ZBX_CASE_SENSITIVE - case sensitive search  *
+ *             case_sensitive  - [IN] OCT_IGNORE_CASE - case insensitive search   *
+ *                                    OCT_CASE_SENSITIVE - case sensitive search  *
  *             delimiter       - [IN] the delimiter separating items in the       *
  *                                    substring list                              *
  *                                                                                *
- * Return value: ZBX_REGEXP_MATCH    - string contains a substring from the list  *
- *               ZBX_REGEXP_NO_MATCH - string does not contain any substrings     *
+ * Return value: OCT_REGEXP_MATCH    - string contains a substring from the list  *
+ *               OCT_REGEXP_NO_MATCH - string does not contain any substrings     *
  *                                     from the list                              *
  *                                                                                *
  **********************************************************************************/
 static int	regexp_match_ex_substring_list(const char *string, char *pattern, int case_sensitive, char delimiter)
 {
-	int	ret = ZBX_REGEXP_NO_MATCH;
+	int	ret = OCT_REGEXP_NO_MATCH;
 	char	*s, *c;
 
-	for (s = pattern; '\0' != *s && ZBX_REGEXP_MATCH != ret;)
+	for (s = pattern; '\0' != *s && OCT_REGEXP_MATCH != ret;)
 	{
 		if (NULL != (c = strchr(s, delimiter)))
 			*c = '\0';
@@ -613,8 +613,8 @@ static int	regexp_match_ex_substring_list(const char *string, char *pattern, int
  *             string          - [IN] the string to check                         *
  *             pattern         - [IN] the regular expression or global regular    *
  *                                    expression name (@<global regexp name>).    *
- *             case_sensitive  - [IN] ZBX_IGNORE_CASE - case insensitive match    *
- *                                    ZBX_CASE_SENSITIVE - case sensitive match   *
+ *             case_sensitive  - [IN] OCT_IGNORE_CASE - case insensitive match    *
+ *                                    OCT_CASE_SENSITIVE - case sensitive match   *
  *             output_template - [IN] the output string template. For regular     *
  *                                    expressions (type Result is TRUE) output    *
  *                                    string is constructed from the template by  *
@@ -627,9 +627,9 @@ static int	regexp_match_ex_substring_list(const char *string, char *pattern, int
  *                                    (substitution) is stored.                   *
  *                                    Specify NULL to skip output value creation. *
  *                                                                                *
- * Return value: ZBX_REGEXP_MATCH    - the string matches the specified regular   *
+ * Return value: OCT_REGEXP_MATCH    - the string matches the specified regular   *
  *                                     expression                                 *
- *               ZBX_REGEXP_NO_MATCH - the string does not match the specified    *
+ *               OCT_REGEXP_NO_MATCH - the string does not match the specified    *
  *                                     regular expression                         *
  *               FAIL                - invalid regular expression                 *
  *                                                                                *
@@ -639,7 +639,7 @@ static int	regexp_match_ex_substring_list(const char *string, char *pattern, int
  *           the whole string is stored into 'output' variable.                   *
  *                                                                                *
  **********************************************************************************/
-int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const char *pattern,
+int	regexp_sub_ex(const oct_vector_ptr_t *regexps, const char *string, const char *pattern,
 		int case_sensitive, const char *output_template, char **output)
 {
 	int	i, ret = FAIL;
@@ -648,7 +648,7 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 	if (NULL == pattern || '\0' == *pattern)
 	{
 		/* always match when no pattern is specified */
-		ret = ZBX_REGEXP_MATCH;
+		ret = OCT_REGEXP_MATCH;
 		goto out;
 	}
 
@@ -663,7 +663,7 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 
 	for (i = 0; i < regexps->values_num; i++)	/* loop over global regexp subexpressions */
 	{
-		const zbx_expression_t	*regexp = (zbx_expression_t *)regexps->values[i];
+		const oct_expression_t	*regexp = (oct_expression_t *)regexps->values[i];
 
 		if (0 != strcmp(regexp->name, pattern))
 			continue;
@@ -675,11 +675,11 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 				{
 					char	*output_tmp = NULL;
 
-					if (ZBX_REGEXP_MATCH == (ret = regexp_match_ex_regsub(string,
+					if (OCT_REGEXP_MATCH == (ret = regexp_match_ex_regsub(string,
 							regexp->expression, regexp->case_sensitive, output_template,
 							&output_tmp)))
 					{
-						zbx_free(output_accu);
+						oct_free(output_accu);
 						output_accu = output_tmp;
 					}
 				}
@@ -693,7 +693,7 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 				ret = regexp_match_ex_regsub(string, regexp->expression, regexp->case_sensitive,
 						NULL, NULL);
 				if (FAIL != ret)	/* invert output value */
-					ret = (ZBX_REGEXP_MATCH == ret ? ZBX_REGEXP_NO_MATCH : ZBX_REGEXP_MATCH);
+					ret = (OCT_REGEXP_MATCH == ret ? OCT_REGEXP_NO_MATCH : OCT_REGEXP_MATCH);
 				break;
 			case EXPRESSION_TYPE_INCLUDED:
 				ret = regexp_match_ex_substring(string, regexp->expression, regexp->case_sensitive);
@@ -701,7 +701,7 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 			case EXPRESSION_TYPE_NOT_INCLUDED:
 				ret = regexp_match_ex_substring(string, regexp->expression, regexp->case_sensitive);
 				/* invert output value */
-				ret = (ZBX_REGEXP_MATCH == ret ? ZBX_REGEXP_NO_MATCH : ZBX_REGEXP_MATCH);
+				ret = (OCT_REGEXP_MATCH == ret ? OCT_REGEXP_NO_MATCH : OCT_REGEXP_MATCH);
 				break;
 			case EXPRESSION_TYPE_ANY_INCLUDED:
 				ret = regexp_match_ex_substring_list(string, regexp->expression, regexp->case_sensitive,
@@ -712,33 +712,33 @@ int	regexp_sub_ex(const zbx_vector_ptr_t *regexps, const char *string, const cha
 				ret = FAIL;
 		}
 
-		if (FAIL == ret || ZBX_REGEXP_NO_MATCH == ret)
+		if (FAIL == ret || OCT_REGEXP_NO_MATCH == ret)
 		{
-			zbx_free(output_accu);
+			oct_free(output_accu);
 			break;
 		}
 	}
 
-	if (ZBX_REGEXP_MATCH == ret && NULL != output_accu)
+	if (OCT_REGEXP_MATCH == ret && NULL != output_accu)
 	{
 		*output = output_accu;
-		return ZBX_REGEXP_MATCH;
+		return OCT_REGEXP_MATCH;
 	}
 out:
-	if (ZBX_REGEXP_MATCH == ret && NULL != output && NULL == *output)
+	if (OCT_REGEXP_MATCH == ret && NULL != output && NULL == *output)
 	{
 		/* Handle output value allocation for global regular expression types   */
 		/* that cannot perform output_template substitution (practically        */
 		/* all global regular expression types except EXPRESSION_TYPE_TRUE).    */
 		size_t	offset = 0, size = 0;
 
-		zbx_strcpy_alloc(output, &size, &offset, string);
+		oct_strcpy_alloc(output, &size, &offset, string);
 	}
 
 	return ret;
 }
 
-int	regexp_match_ex(const zbx_vector_ptr_t *regexps, const char *string, const char *pattern, int case_sensitive)
+int	regexp_match_ex(const oct_vector_ptr_t *regexps, const char *string, const char *pattern, int case_sensitive)
 {
 	return regexp_sub_ex(regexps, string, pattern, case_sensitive, NULL, NULL);
 }

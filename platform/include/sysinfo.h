@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_SYSINFO_H
-#define ZABBIX_SYSINFO_H
+#ifndef OCT_SYSINFO_H
+#define OCT_SYSINFO_H
 
 #include "common.h"
 #include "module.h"
@@ -42,7 +42,7 @@
 do									\
 {									\
 	(res)->type &= ~AR_UINT64;					\
-	(res)->ui64 = (zbx_uint64_t)0;					\
+	(res)->ui64 = (oct_uint64_t)0;					\
 }									\
 while (0)
 
@@ -61,7 +61,7 @@ do									\
 {									\
 	if ((res)->type & AR_STRING)					\
 	{								\
-		zbx_free((res)->str);					\
+		oct_free((res)->str);					\
 		(res)->type &= ~AR_STRING;				\
 	}								\
 }									\
@@ -73,7 +73,7 @@ do									\
 {									\
 	if ((res)->type & AR_TEXT)					\
 	{								\
-		zbx_free((res)->text);					\
+		oct_free((res)->text);					\
 		(res)->type &= ~AR_TEXT;				\
 	}								\
 }									\
@@ -85,7 +85,7 @@ do									\
 {									\
 	if ((res)->type & AR_LOG)					\
 	{								\
-		zbx_log_free((res)->log);				\
+		oct_log_free((res)->log);				\
 		(res)->log = NULL;					\
 		(res)->type &= ~AR_LOG;					\
 	}								\
@@ -98,7 +98,7 @@ do									\
 {									\
 	if ((res)->type & AR_MESSAGE)					\
 	{								\
-		zbx_free((res)->msg);					\
+		oct_free((res)->msg);					\
 		(res)->type &= ~AR_MESSAGE;				\
 	}								\
 }									\
@@ -119,16 +119,16 @@ while (0)
 
 /* RETRIEVE RESULT VALUE */
 
-#define GET_UI64_RESULT(res)	((zbx_uint64_t *)get_result_value_by_type(res, AR_UINT64))
+#define GET_UI64_RESULT(res)	((oct_uint64_t *)get_result_value_by_type(res, AR_UINT64))
 #define GET_DBL_RESULT(res)	((double *)get_result_value_by_type(res, AR_DOUBLE))
 #define GET_STR_RESULT(res)	((char **)get_result_value_by_type(res, AR_STRING))
 #define GET_TEXT_RESULT(res)	((char **)get_result_value_by_type(res, AR_TEXT))
-#define GET_LOG_RESULT(res)	((zbx_log_t *)get_result_value_by_type(res, AR_LOG))
+#define GET_LOG_RESULT(res)	((oct_log_t *)get_result_value_by_type(res, AR_LOG))
 #define GET_MSG_RESULT(res)	((char **)get_result_value_by_type(res, AR_MESSAGE))
 
 void    *get_result_value_by_type(AGENT_RESULT *result, int require_type);
 
-#define ZBX_FLOAT_PRECISION	0.0001
+#define OCT_FLOAT_PRECISION	0.0001
 
 extern int	CONFIG_ENABLE_REMOTE_COMMANDS;
 extern int	CONFIG_LOG_REMOTE_COMMANDS;
@@ -136,56 +136,56 @@ extern int	CONFIG_UNSAFE_USER_PARAMETERS;
 
 /* collector */
 #define MAX_COLLECTOR_HISTORY	(15 * SEC_PER_MIN + 1)
-#define ZBX_AVG1		0
-#define ZBX_AVG5		1
-#define ZBX_AVG15		2
-#define ZBX_AVG_COUNT		3
+#define OCT_AVG1		0
+#define OCT_AVG5		1
+#define OCT_AVG15		2
+#define OCT_AVG_COUNT		3
 
 #ifdef _WINDOWS
 #	define MAX_COLLECTOR_PERIOD	(15 * SEC_PER_MIN)
 #endif
 
-#define ZBX_CPU_STATE_USER	0
-#define ZBX_CPU_STATE_SYSTEM	1
-#define ZBX_CPU_STATE_NICE	2
-#define ZBX_CPU_STATE_IDLE	3
-#define ZBX_CPU_STATE_INTERRUPT	4
-#define ZBX_CPU_STATE_IOWAIT	5
-#define ZBX_CPU_STATE_SOFTIRQ	6
-#define ZBX_CPU_STATE_STEAL	7
-#define ZBX_CPU_STATE_GCPU	8
-#define ZBX_CPU_STATE_GNICE	9
-#define ZBX_CPU_STATE_COUNT	10
+#define OCT_CPU_STATE_USER	0
+#define OCT_CPU_STATE_SYSTEM	1
+#define OCT_CPU_STATE_NICE	2
+#define OCT_CPU_STATE_IDLE	3
+#define OCT_CPU_STATE_INTERRUPT	4
+#define OCT_CPU_STATE_IOWAIT	5
+#define OCT_CPU_STATE_SOFTIRQ	6
+#define OCT_CPU_STATE_STEAL	7
+#define OCT_CPU_STATE_GCPU	8
+#define OCT_CPU_STATE_GNICE	9
+#define OCT_CPU_STATE_COUNT	10
 
-#define ZBX_PROC_STAT_ALL	0
-#define ZBX_PROC_STAT_RUN	1
-#define ZBX_PROC_STAT_SLEEP	2
-#define ZBX_PROC_STAT_ZOMB	3
-#define ZBX_PROC_STAT_DISK	4
-#define ZBX_PROC_STAT_TRACE	5
+#define OCT_PROC_STAT_ALL	0
+#define OCT_PROC_STAT_RUN	1
+#define OCT_PROC_STAT_SLEEP	2
+#define OCT_PROC_STAT_ZOMB	3
+#define OCT_PROC_STAT_DISK	4
+#define OCT_PROC_STAT_TRACE	5
 
-#define ZBX_DO_SUM		0
-#define ZBX_DO_MAX		1
-#define ZBX_DO_MIN		2
-#define ZBX_DO_AVG		3
-#define ZBX_DO_ONE		4
+#define OCT_DO_SUM		0
+#define OCT_DO_MAX		1
+#define OCT_DO_MIN		2
+#define OCT_DO_AVG		3
+#define OCT_DO_ONE		4
 
-#define ZBX_DSTAT_TYPE_SECT	0
-#define ZBX_DSTAT_TYPE_OPER	1
-#define ZBX_DSTAT_TYPE_BYTE	2
-#define ZBX_DSTAT_TYPE_SPS	3
-#define ZBX_DSTAT_TYPE_OPS	4
-#define ZBX_DSTAT_TYPE_BPS	5
+#define OCT_DSTAT_TYPE_SECT	0
+#define OCT_DSTAT_TYPE_OPER	1
+#define OCT_DSTAT_TYPE_BYTE	2
+#define OCT_DSTAT_TYPE_SPS	3
+#define OCT_DSTAT_TYPE_OPS	4
+#define OCT_DSTAT_TYPE_BPS	5
 
 /* disk statistics */
-#define ZBX_DSTAT_R_SECT	0
-#define ZBX_DSTAT_R_OPER	1
-#define ZBX_DSTAT_R_BYTE	2
-#define ZBX_DSTAT_W_SECT	3
-#define ZBX_DSTAT_W_OPER	4
-#define ZBX_DSTAT_W_BYTE	5
-#define ZBX_DSTAT_MAX		6
-int	get_diskstat(const char *devname, zbx_uint64_t *dstat);
+#define OCT_DSTAT_R_SECT	0
+#define OCT_DSTAT_R_OPER	1
+#define OCT_DSTAT_R_BYTE	2
+#define OCT_DSTAT_W_SECT	3
+#define OCT_DSTAT_W_OPER	4
+#define OCT_DSTAT_W_BYTE	5
+#define OCT_DSTAT_MAX		6
+int	get_diskstat(const char *devname, oct_uint64_t *dstat);
 
 /* flags for process */
 #define PROCESS_LOCAL_COMMAND	0x1
@@ -193,7 +193,7 @@ int	get_diskstat(const char *devname, zbx_uint64_t *dstat);
 #define PROCESS_WITH_ALIAS	0x4
 
 void	init_metrics(void);
-int	add_metric(ZBX_METRIC *metric, char *error, size_t max_error_len);
+int	add_metric(OCT_METRIC *metric, char *error, size_t max_error_len);
 void	free_metrics(void);
 
 int	process(const char *in_command, unsigned flags, AGENT_RESULT *result);
@@ -204,7 +204,7 @@ void	test_parameters(void);
 void	test_parameter(const char *key);
 
 void	init_result(AGENT_RESULT *result);
-void	zbx_log_free(zbx_log_t *log);
+void	oct_log_free(oct_log_t *log);
 void	free_result(AGENT_RESULT *result);
 
 void	init_request(AGENT_REQUEST *request);
@@ -216,10 +216,10 @@ void	unquote_key_param(char *param);
 int	quote_key_param(char **param, int forced);
 
 int	set_result_type(AGENT_RESULT *result, int value_type, char *c);
-void	set_result_meta(AGENT_RESULT *result, zbx_uint64_t lastlogsize, int mtime);
+void	set_result_meta(AGENT_RESULT *result, oct_uint64_t lastlogsize, int mtime);
 
 #ifdef HAVE_KSTAT_H
-zbx_uint64_t	get_kstat_numeric_value(const kstat_named_t *kn);
+oct_uint64_t	get_kstat_numeric_value(const kstat_named_t *kn);
 #endif
 
 /* external system functions */
@@ -228,7 +228,7 @@ int	GET_SENSOR(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	KERNEL_MAXFILES(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	KERNEL_MAXPROC(AGENT_REQUEST *request, AGENT_RESULT *result);
 
-#ifdef ZBX_PROCSTAT_COLLECTOR
+#ifdef OCT_PROCSTAT_COLLECTOR
 int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result);
 #endif
 
@@ -285,7 +285,7 @@ int	VM_VMEMORY_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	SYSTEM_STAT(AGENT_REQUEST *request, AGENT_RESULT *result);
 #endif
 
-typedef int (*zbx_metric_func_t)(AGENT_REQUEST *request, AGENT_RESULT *result);
+typedef int (*oct_metric_func_t)(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 typedef struct
 {
@@ -294,13 +294,13 @@ typedef struct
 }
 MODE_FUNCTION;
 
-int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *request, AGENT_RESULT *result);
+int	oct_execute_threaded_metric(oct_metric_func_t metric_func, AGENT_REQUEST *request, AGENT_RESULT *result);
 
 /* the fields used by proc queries */
-#define ZBX_SYSINFO_PROC_NONE		0x0000
-#define ZBX_SYSINFO_PROC_PID		0x0001
-#define ZBX_SYSINFO_PROC_NAME		0x0002
-#define ZBX_SYSINFO_PROC_CMDLINE	0x0004
-#define ZBX_SYSINFO_PROC_USER		0x0008
+#define OCT_SYSINFO_PROC_NONE		0x0000
+#define OCT_SYSINFO_PROC_PID		0x0001
+#define OCT_SYSINFO_PROC_NAME		0x0002
+#define OCT_SYSINFO_PROC_CMDLINE	0x0004
+#define OCT_SYSINFO_PROC_USER		0x0008
 
 #endif

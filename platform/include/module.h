@@ -17,22 +17,22 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_MODULE_H
-#define ZABBIX_MODULE_H
+#ifndef OCT_MODULE_H
+#define OCT_MODULE_H
 
 #include "octtypes.h"
 
-#define ZBX_MODULE_OK	0
-#define ZBX_MODULE_FAIL	-1
+#define OCT_MODULE_OK	0
+#define OCT_MODULE_FAIL	-1
 
-/* zbx_module_api_version() MUST return this constant */
-#define ZBX_MODULE_API_VERSION	2
+/* oct_module_api_version() MUST return this constant */
+#define OCT_MODULE_API_VERSION	2
 
 /* old name alias is kept for source compatibility only, SHOULD NOT be used */
-#define ZBX_MODULE_API_VERSION_ONE	ZBX_MODULE_API_VERSION
+#define OCT_MODULE_API_VERSION_ONE	OCT_MODULE_API_VERSION
 
 /* HINT: For conditional compilation with different module.h versions modules can use: */
-/* #if ZBX_MODULE_API_VERSION == X                                                     */
+/* #if OCT_MODULE_API_VERSION == X                                                     */
 /*         ...                                                                         */
 /* #endif                                                                              */
 
@@ -51,7 +51,7 @@ typedef struct
 	char		*key;
 	int		nparam;
 	char		**params;
-	zbx_uint64_t	lastlogsize;
+	oct_uint64_t	lastlogsize;
 	int		mtime;
 }
 AGENT_REQUEST;
@@ -64,7 +64,7 @@ typedef struct
 	int		severity;
 	int		logeventid;
 }
-zbx_log_t;
+oct_log_t;
 
 /* agent result types */
 #define AR_UINT64	0x01
@@ -78,13 +78,13 @@ zbx_log_t;
 /* agent return structure */
 typedef struct
 {
-	zbx_uint64_t	lastlogsize;	/* meta information */
-	zbx_uint64_t	ui64;
+	oct_uint64_t	lastlogsize;	/* meta information */
+	oct_uint64_t	ui64;
 	double		dbl;
 	char		*str;
 	char		*text;
 	char		*msg;		/* possible error message */
-	zbx_log_t	*log;
+	oct_log_t	*log;
 	int	 	type;		/* flags: see AR_* above */
 	int		mtime;		/* meta information */
 }
@@ -97,14 +97,14 @@ typedef struct
 	int		(*function)(AGENT_REQUEST *request, AGENT_RESULT *result);
 	char		*test_param;	/* item test parameters; user parameter items keep command here */
 }
-ZBX_METRIC;
+OCT_METRIC;
 
 /* SET RESULT */
 
 #define SET_UI64_RESULT(res, val)		\
 (						\
 	(res)->type |= AR_UINT64,		\
-	(res)->ui64 = (zbx_uint64_t)(val)	\
+	(res)->ui64 = (oct_uint64_t)(val)	\
 )
 
 #define SET_DBL_RESULT(res, val)		\
@@ -131,7 +131,7 @@ ZBX_METRIC;
 #define SET_LOG_RESULT(res, val)		\
 (						\
 	(res)->type |= AR_LOG,			\
-	(res)->log = (zbx_log_t *)(val)		\
+	(res)->log = (oct_log_t *)(val)		\
 )
 
 /* NOTE: always allocate new memory for val! DON'T USE STATIC OR STACK MEMORY!!! */
@@ -146,43 +146,43 @@ ZBX_METRIC;
 
 typedef struct
 {
-	zbx_uint64_t	itemid;
+	oct_uint64_t	itemid;
 	int		clock;
 	int		ns;
 	double		value;
 }
-ZBX_HISTORY_FLOAT;
+OCT_HISTORY_FLOAT;
 
 typedef struct
 {
-	zbx_uint64_t	itemid;
+	oct_uint64_t	itemid;
 	int		clock;
 	int		ns;
-	zbx_uint64_t	value;
+	oct_uint64_t	value;
 }
-ZBX_HISTORY_INTEGER;
+OCT_HISTORY_INTEGER;
 
 typedef struct
 {
-	zbx_uint64_t	itemid;
-	int		clock;
-	int		ns;
-	const char	*value;
-}
-ZBX_HISTORY_STRING;
-
-typedef struct
-{
-	zbx_uint64_t	itemid;
+	oct_uint64_t	itemid;
 	int		clock;
 	int		ns;
 	const char	*value;
 }
-ZBX_HISTORY_TEXT;
+OCT_HISTORY_STRING;
 
 typedef struct
 {
-	zbx_uint64_t	itemid;
+	oct_uint64_t	itemid;
+	int		clock;
+	int		ns;
+	const char	*value;
+}
+OCT_HISTORY_TEXT;
+
+typedef struct
+{
+	oct_uint64_t	itemid;
 	int		clock;
 	int		ns;
 	const char	*value;
@@ -191,16 +191,16 @@ typedef struct
 	int		logeventid;
 	int		severity;
 }
-ZBX_HISTORY_LOG;
+OCT_HISTORY_LOG;
 
 typedef struct
 {
-	void	(*history_float_cb)(const ZBX_HISTORY_FLOAT *history, int history_num);
-	void	(*history_integer_cb)(const ZBX_HISTORY_INTEGER *history, int history_num);
-	void	(*history_string_cb)(const ZBX_HISTORY_STRING *history, int history_num);
-	void	(*history_text_cb)(const ZBX_HISTORY_TEXT *history, int history_num);
-	void	(*history_log_cb)(const ZBX_HISTORY_LOG *history, int history_num);
+	void	(*history_float_cb)(const OCT_HISTORY_FLOAT *history, int history_num);
+	void	(*history_integer_cb)(const OCT_HISTORY_INTEGER *history, int history_num);
+	void	(*history_string_cb)(const OCT_HISTORY_STRING *history, int history_num);
+	void	(*history_text_cb)(const OCT_HISTORY_TEXT *history, int history_num);
+	void	(*history_log_cb)(const OCT_HISTORY_LOG *history, int history_num);
 }
-ZBX_HISTORY_WRITE_CBS;
+OCT_HISTORY_WRITE_CBS;
 
 #endif

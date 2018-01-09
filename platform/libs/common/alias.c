@@ -40,7 +40,7 @@ void	add_alias(const char *name, const char *value)
 		/* add new Alias */
 		if (NULL == alias)
 		{
-			alias = (ALIAS *)zbx_malloc(alias, sizeof(ALIAS));
+			alias = (ALIAS *)oct_malloc(alias, sizeof(ALIAS));
 
 			alias->name = strdup(name);
 			alias->value = strdup(value);
@@ -70,20 +70,20 @@ void	alias_list_free(void)
 	{
 		curr = next;
 		next = curr->next;
-		zbx_free(curr->value);
-		zbx_free(curr->name);
-		zbx_free(curr);
+		oct_free(curr->value);
+		oct_free(curr->name);
+		oct_free(curr);
 	}
 
 	aliasList = NULL;
 }
 
-const char	*zbx_alias_get(const char *orig)
+const char	*oct_alias_get(const char *orig)
 {
 	ALIAS				*alias;
 	size_t				len_name, len_value;
-	ZBX_THREAD_LOCAL static char	*buffer = NULL;
-	ZBX_THREAD_LOCAL static size_t	buffer_alloc = 0;
+	OCT_THREAD_LOCAL static char	*buffer = NULL;
+	OCT_THREAD_LOCAL static size_t	buffer_alloc = 0;
 	size_t				buffer_offset = 0;
 	const char			*p = orig;
 
@@ -109,8 +109,8 @@ const char	*zbx_alias_get(const char *orig)
 		if (3 >= len_value || 0 != strcmp(alias->value + len_value - 3, "[*]"))
 			return alias->value;
 
-		zbx_strncpy_alloc(&buffer, &buffer_alloc, &buffer_offset, alias->value, len_value - 3);
-		zbx_strcpy_alloc(&buffer, &buffer_alloc, &buffer_offset, orig + len_name - 3);
+		oct_strncpy_alloc(&buffer, &buffer_alloc, &buffer_offset, alias->value, len_value - 3);
+		oct_strcpy_alloc(&buffer, &buffer_alloc, &buffer_offset, orig + len_name - 3);
 		return buffer;
 	}
 

@@ -38,27 +38,27 @@ typedef struct
 	/* process command line in format <arg0> <arg1> ... <argN>\0 */
 	char		*cmdline;
 }
-zbx_sysinfo_proc_t;
+oct_sysinfo_proc_t;
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_sysinfo_proc_free                                            *
+ * Function: oct_sysinfo_proc_free                                            *
  *                                                                            *
  * Purpose: frees process data structure                                      *
  *                                                                            *
  ******************************************************************************/
-static void	zbx_sysinfo_proc_free(zbx_sysinfo_proc_t *proc)
+static void	oct_sysinfo_proc_free(oct_sysinfo_proc_t *proc)
 {
-	zbx_free(proc->name);
-	zbx_free(proc->name_arg0);
-	zbx_free(proc->cmdline);
+	oct_free(proc->name);
+	oct_free(proc->name_arg0);
+	oct_free(proc->cmdline);
 
-	zbx_free(proc);
+	oct_free(proc);
 }
 
 static int	get_cmdline(FILE *f_cmd, char **line, size_t *line_offset)
 {
-	size_t	line_alloc = ZBX_KIBIBYTE, n;
+	size_t	line_alloc = OCT_KIBIBYTE, n;
 
 	rewind(f_cmd);
 
@@ -86,7 +86,7 @@ static int	get_cmdline(FILE *f_cmd, char **line, size_t *line_offset)
 		return SUCCEED;
 	}
 
-	zbx_free(*line);
+	oct_free(*line);
 
 	return FAIL;
 }
@@ -102,7 +102,7 @@ static int	cmp_status(FILE *f_stat, const char *procname)
 		if (0 != strncmp(tmp, "Name:\t", 6))
 			continue;
 
-		zbx_rtrim(tmp + 6, "\n");
+		oct_rtrim(tmp + 6, "\n");
 		if (0 == strcmp(tmp + 6, procname))
 			return SUCCEED;
 		break;
@@ -137,7 +137,7 @@ static int	check_procname(FILE *f_cmd, FILE *f_stat, const char *procname)
 
 	ret = FAIL;
 clean:
-	zbx_free(tmp);
+	oct_free(tmp);
 
 	return ret;
 }
@@ -187,22 +187,22 @@ static int	check_proccomm(FILE *f_cmd, const char *proccomm)
 			if ('\0' == tmp[i])
 				tmp[i] = ' ';
 
-		if (NULL != zbx_regexp_match(tmp, proccomm, NULL))
+		if (NULL != oct_regexp_match(tmp, proccomm, NULL))
 			goto clean;
 	}
 
 	ret = FAIL;
 clean:
-	zbx_free(tmp);
+	oct_free(tmp);
 
 	return ret;
 }
 
-static int	check_procstate(FILE *f_stat, int zbx_proc_stat)
+static int	check_procstate(FILE *f_stat, int oct_proc_stat)
 {
 	char	tmp[MAX_STRING_LEN], *p;
 
-	if (ZBX_PROC_STAT_ALL == zbx_proc_stat)
+	if (OCT_PROC_STAT_ALL == oct_proc_stat)
 		return SUCCEED;
 
 	rewind(f_stat);
@@ -214,17 +214,17 @@ static int	check_procstate(FILE *f_stat, int zbx_proc_stat)
 
 		p = tmp + 7;
 
-		switch (zbx_proc_stat)
+		switch (oct_proc_stat)
 		{
-			case ZBX_PROC_STAT_RUN:
+			case OCT_PROC_STAT_RUN:
 				return ('R' == *p) ? SUCCEED : FAIL;
-			case ZBX_PROC_STAT_SLEEP:
+			case OCT_PROC_STAT_SLEEP:
 				return ('S' == *p) ? SUCCEED : FAIL;
-			case ZBX_PROC_STAT_ZOMB:
+			case OCT_PROC_STAT_ZOMB:
 				return ('Z' == *p) ? SUCCEED : FAIL;
-			case ZBX_PROC_STAT_DISK:
+			case OCT_PROC_STAT_DISK:
 				return ('D' == *p) ? SUCCEED : FAIL;
-			case ZBX_PROC_STAT_TRACE:
+			case OCT_PROC_STAT_TRACE:
 				return ('T' == *p) ? SUCCEED : FAIL;
 			default:
 				return FAIL;
@@ -255,7 +255,7 @@ static int	check_procstate(FILE *f_stat, int zbx_proc_stat)
  *               FAIL - the search string was found but could not be parsed.  *
  *                                                                            *
  ******************************************************************************/
-int	byte_value_from_proc_file(FILE *f, const char *label, const char *guard, zbx_uint64_t *bytes)
+int	byte_value_from_proc_file(FILE *f, const char *label, const char *guard, oct_uint64_t *bytes)
 {
 	char	buf[MAX_STRING_LEN], *p_value, *p_unit;
 	size_t	label_len, guard_len;
@@ -304,7 +304,7 @@ int	byte_value_from_proc_file(FILE *f, const char *label, const char *guard, zbx
 			break;
 		}
 
-		zbx_rtrim(p_unit, "\n");
+		oct_rtrim(p_unit, "\n");
 
 		if (0 == strcasecmp(p_unit, "kB"))
 			*bytes <<= 10;
@@ -322,7 +322,7 @@ int	byte_value_from_proc_file(FILE *f, const char *label, const char *guard, zbx
 	return ret;
 }
 
-static int	get_total_memory(zbx_uint64_t *total_memory)
+static int	get_total_memory(oct_uint64_t *total_memory)
 {
 	FILE	*f;
 	int	ret = FAIL;
@@ -330,7 +330,7 @@ static int	get_total_memory(zbx_uint64_t *total_memory)
 	if (NULL != (f = fopen("/proc/meminfo", "r")))
 	{
 		ret = byte_value_from_proc_file(f, "MemTotal:", NULL, total_memory);
-		zbx_fclose(f);
+		oct_fclose(f);
 	}
 
 	return ret;
@@ -338,27 +338,27 @@ static int	get_total_memory(zbx_uint64_t *total_memory)
 
 int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-#define ZBX_SIZE	0
-#define ZBX_RSS		1
-#define ZBX_VSIZE	2
-#define ZBX_PMEM	3
-#define ZBX_VMPEAK	4
-#define ZBX_VMSWAP	5
-#define ZBX_VMLIB	6
-#define ZBX_VMLCK	7
-#define ZBX_VMPIN	8
-#define ZBX_VMHWM	9
-#define ZBX_VMDATA	10
-#define ZBX_VMSTK	11
-#define ZBX_VMEXE	12
-#define ZBX_VMPTE	13
+#define OCT_SIZE	0
+#define OCT_RSS		1
+#define OCT_VSIZE	2
+#define OCT_PMEM	3
+#define OCT_VMPEAK	4
+#define OCT_VMSWAP	5
+#define OCT_VMLIB	6
+#define OCT_VMLCK	7
+#define OCT_VMPIN	8
+#define OCT_VMHWM	9
+#define OCT_VMDATA	10
+#define OCT_VMSTK	11
+#define OCT_VMEXE	12
+#define OCT_VMPTE	13
 
 	char		tmp[MAX_STRING_LEN], *procname, *proccomm, *param;
 	DIR		*dir;
 	struct dirent	*entries;
 	struct passwd	*usrinfo;
 	FILE		*f_cmd = NULL, *f_stat = NULL;
-	zbx_uint64_t	mem_size = 0, byte_value = 0, total_memory;
+	oct_uint64_t	mem_size = 0, byte_value = 0, total_memory;
 	double		pct_size = 0.0, pct_value = 0.0;
 	int		do_task, res, proccount = 0, invalid_user = 0, invalid_read = 0;
 	int		mem_type_tried = 0, mem_type_code;
@@ -367,7 +367,7 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (5 < request->nparam)
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Too many parameters."));
 		return SYSINFO_RET_FAIL;
 	}
 
@@ -382,7 +382,7 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		{
 			if (0 != errno)
 			{
-				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot obtain user information: %s",
+				SET_MSG_RESULT(result, oct_dsprintf(NULL, "Cannot obtain user information: %s",
 							strerror(errno)));
 				return SYSINFO_RET_FAIL;
 			}
@@ -396,16 +396,16 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	param = get_rparam(request, 2);
 
 	if (NULL == param || '\0' == *param || 0 == strcmp(param, "sum"))
-		do_task = ZBX_DO_SUM;
+		do_task = OCT_DO_SUM;
 	else if (0 == strcmp(param, "avg"))
-		do_task = ZBX_DO_AVG;
+		do_task = OCT_DO_AVG;
 	else if (0 == strcmp(param, "max"))
-		do_task = ZBX_DO_MAX;
+		do_task = OCT_DO_MAX;
 	else if (0 == strcmp(param, "min"))
-		do_task = ZBX_DO_MIN;
+		do_task = OCT_DO_MIN;
 	else
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Invalid third parameter."));
 		return SYSINFO_RET_FAIL;
 	}
 
@@ -419,117 +419,117 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (NULL == mem_type || '\0' == *mem_type || 0 == strcmp(mem_type, "vsize"))
 	{
-		mem_type_code = ZBX_VSIZE;		/* current virtual memory size (total program size) */
+		mem_type_code = OCT_VSIZE;		/* current virtual memory size (total program size) */
 		mem_type_search = "VmSize:\t";
 	}
 	else if (0 == strcmp(mem_type, "rss"))
 	{
-		mem_type_code = ZBX_RSS;		/* current resident set size (size of memory portions) */
+		mem_type_code = OCT_RSS;		/* current resident set size (size of memory portions) */
 		mem_type_search = "VmRSS:\t";
 	}
 	else if (0 == strcmp(mem_type, "pmem"))
 	{
-		mem_type_code = ZBX_PMEM;		/* percentage of real memory used by process */
+		mem_type_code = OCT_PMEM;		/* percentage of real memory used by process */
 	}
 	else if (0 == strcmp(mem_type, "size"))
 	{
-		mem_type_code = ZBX_SIZE;		/* size of process (code + data + stack) */
+		mem_type_code = OCT_SIZE;		/* size of process (code + data + stack) */
 	}
 	else if (0 == strcmp(mem_type, "peak"))
 	{
-		mem_type_code = ZBX_VMPEAK;		/* peak virtual memory size */
+		mem_type_code = OCT_VMPEAK;		/* peak virtual memory size */
 		mem_type_search = "VmPeak:\t";
 	}
 	else if (0 == strcmp(mem_type, "swap"))
 	{
-		mem_type_code = ZBX_VMSWAP;		/* size of swap space used */
+		mem_type_code = OCT_VMSWAP;		/* size of swap space used */
 		mem_type_search = "VmSwap:\t";
 	}
 	else if (0 == strcmp(mem_type, "lib"))
 	{
-		mem_type_code = ZBX_VMLIB;		/* size of shared libraries */
+		mem_type_code = OCT_VMLIB;		/* size of shared libraries */
 		mem_type_search = "VmLib:\t";
 	}
 	else if (0 == strcmp(mem_type, "lck"))
 	{
-		mem_type_code = ZBX_VMLCK;		/* size of locked memory */
+		mem_type_code = OCT_VMLCK;		/* size of locked memory */
 		mem_type_search = "VmLck:\t";
 	}
 	else if (0 == strcmp(mem_type, "pin"))
 	{
-		mem_type_code = ZBX_VMPIN;		/* size of pinned pages, they are never swappable */
+		mem_type_code = OCT_VMPIN;		/* size of pinned pages, they are never swappable */
 		mem_type_search = "VmPin:\t";
 	}
 	else if (0 == strcmp(mem_type, "hwm"))
 	{
-		mem_type_code = ZBX_VMHWM;		/* peak resident set size ("high water mark") */
+		mem_type_code = OCT_VMHWM;		/* peak resident set size ("high water mark") */
 		mem_type_search = "VmHWM:\t";
 	}
 	else if (0 == strcmp(mem_type, "data"))
 	{
-		mem_type_code = ZBX_VMDATA;		/* size of data segment */
+		mem_type_code = OCT_VMDATA;		/* size of data segment */
 		mem_type_search = "VmData:\t";
 	}
 	else if (0 == strcmp(mem_type, "stk"))
 	{
-		mem_type_code = ZBX_VMSTK;		/* size of stack segment */
+		mem_type_code = OCT_VMSTK;		/* size of stack segment */
 		mem_type_search = "VmStk:\t";
 	}
 	else if (0 == strcmp(mem_type, "exe"))
 	{
-		mem_type_code = ZBX_VMEXE;		/* size of text (code) segment */
+		mem_type_code = OCT_VMEXE;		/* size of text (code) segment */
 		mem_type_search = "VmExe:\t";
 	}
 	else if (0 == strcmp(mem_type, "pte"))
 	{
-		mem_type_code = ZBX_VMPTE;		/* size of page table entries */
+		mem_type_code = OCT_VMPTE;		/* size of page table entries */
 		mem_type_search = "VmPTE:\t";
 	}
 	else
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Invalid fifth parameter."));
 		return SYSINFO_RET_FAIL;
 	}
 
 	if (1 == invalid_user)	/* handle 0 for non-existent user after all parameters have been parsed and validated */
 		goto out;
 
-	if (ZBX_PMEM == mem_type_code)
+	if (OCT_PMEM == mem_type_code)
 	{
 		if (SUCCEED != get_total_memory(&total_memory))
 		{
-			SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot obtain amount of total memory: %s",
+			SET_MSG_RESULT(result, oct_dsprintf(NULL, "Cannot obtain amount of total memory: %s",
 					strerror(errno)));
 			return SYSINFO_RET_FAIL;
 		}
 
 		if (0 == total_memory)	/* this should never happen but anyway - avoid crash due to dividing by 0 */
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Total memory reported is 0."));
+			SET_MSG_RESULT(result, oct_strdup(NULL, "Total memory reported is 0."));
 			return SYSINFO_RET_FAIL;
 		}
 	}
 
 	if (NULL == (dir = opendir("/proc")))
 	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /proc: %s", strerror(errno)));
+		SET_MSG_RESULT(result, oct_dsprintf(NULL, "Cannot open /proc: %s", strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
 	while (NULL != (entries = readdir(dir)))
 	{
-		zbx_fclose(f_cmd);
-		zbx_fclose(f_stat);
+		oct_fclose(f_cmd);
+		oct_fclose(f_stat);
 
 		if (0 == strcmp(entries->d_name, "self"))
 			continue;
 
-		zbx_snprintf(tmp, sizeof(tmp), "/proc/%s/cmdline", entries->d_name);
+		oct_snprintf(tmp, sizeof(tmp), "/proc/%s/cmdline", entries->d_name);
 
 		if (NULL == (f_cmd = fopen(tmp, "r")))
 			continue;
 
-		zbx_snprintf(tmp, sizeof(tmp), "/proc/%s/status", entries->d_name);
+		oct_snprintf(tmp, sizeof(tmp), "/proc/%s/status", entries->d_name);
 
 		if (NULL == (f_stat = fopen(tmp, "r")))
 			continue;
@@ -550,18 +550,18 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 		switch (mem_type_code)
 		{
-			case ZBX_VSIZE:
-			case ZBX_RSS:
-			case ZBX_VMPEAK:
-			case ZBX_VMSWAP:
-			case ZBX_VMLIB:
-			case ZBX_VMLCK:
-			case ZBX_VMPIN:
-			case ZBX_VMHWM:
-			case ZBX_VMDATA:
-			case ZBX_VMSTK:
-			case ZBX_VMEXE:
-			case ZBX_VMPTE:
+			case OCT_VSIZE:
+			case OCT_RSS:
+			case OCT_VMPEAK:
+			case OCT_VMSWAP:
+			case OCT_VMLIB:
+			case OCT_VMLCK:
+			case OCT_VMPIN:
+			case OCT_VMHWM:
+			case OCT_VMDATA:
+			case OCT_VMSTK:
+			case OCT_VMEXE:
+			case OCT_VMPTE:
 				res = byte_value_from_proc_file(f_stat, mem_type_search, NULL, &byte_value);
 
 				if (NOTSUPPORTED == res)
@@ -573,9 +573,9 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 					goto clean;
 				}
 				break;
-			case ZBX_SIZE:
+			case OCT_SIZE:
 				{
-					zbx_uint64_t	m;
+					oct_uint64_t	m;
 
 					/* VmData, VmStk and VmExe follow in /proc/PID/status file in that order. */
 					/* Therefore we do not rewind f_stat between calls. */
@@ -617,7 +617,7 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 					}
 				}
 				break;
-			case ZBX_PMEM:
+			case OCT_PMEM:
 				mem_type_search = "VmRSS:\t";
 				res = byte_value_from_proc_file(f_stat, mem_type_search, NULL, &byte_value);
 
@@ -637,13 +637,13 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 				break;
 		}
 
-		if (ZBX_PMEM != mem_type_code)
+		if (OCT_PMEM != mem_type_code)
 		{
 			if (0 != proccount++)
 			{
-				if (ZBX_DO_MAX == do_task)
+				if (OCT_DO_MAX == do_task)
 					mem_size = MAX(mem_size, byte_value);
-				else if (ZBX_DO_MIN == do_task)
+				else if (OCT_DO_MIN == do_task)
 					mem_size = MIN(mem_size, byte_value);
 				else
 					mem_size += byte_value;
@@ -655,9 +655,9 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		{
 			if (0 != proccount++)
 			{
-				if (ZBX_DO_MAX == do_task)
+				if (OCT_DO_MAX == do_task)
 					pct_size = MAX(pct_size, pct_value);
-				else if (ZBX_DO_MIN == do_task)
+				else if (OCT_DO_MIN == do_task)
 					pct_size = MIN(pct_size, pct_value);
 				else
 					pct_size += pct_value;
@@ -667,31 +667,31 @@ int	PROC_MEM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		}
 	}
 clean:
-	zbx_fclose(f_cmd);
-	zbx_fclose(f_stat);
+	oct_fclose(f_cmd);
+	oct_fclose(f_stat);
 	closedir(dir);
 
 	if ((0 == proccount && 0 != mem_type_tried) || 0 != invalid_read)
 	{
 		char	*s;
 
-		s = zbx_strdup(NULL, mem_type_search);
-		zbx_rtrim(s, ":\t");
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot get amount of \"%s\" memory.", s));
-		zbx_free(s);
+		s = oct_strdup(NULL, mem_type_search);
+		oct_rtrim(s, ":\t");
+		SET_MSG_RESULT(result, oct_dsprintf(NULL, "Cannot get amount of \"%s\" memory.", s));
+		oct_free(s);
 		return SYSINFO_RET_FAIL;
 	}
 out:
-	if (ZBX_PMEM != mem_type_code)
+	if (OCT_PMEM != mem_type_code)
 	{
-		if (ZBX_DO_AVG == do_task)
+		if (OCT_DO_AVG == do_task)
 			SET_DBL_RESULT(result, 0 == proccount ? 0 : (double)mem_size / (double)proccount);
 		else
 			SET_UI64_RESULT(result, mem_size);
 	}
 	else
 	{
-		if (ZBX_DO_AVG == do_task)
+		if (OCT_DO_AVG == do_task)
 			SET_DBL_RESULT(result, 0 == proccount ? 0 : pct_size / (double)proccount);
 		else
 			SET_DBL_RESULT(result, pct_size);
@@ -699,20 +699,20 @@ out:
 
 	return SYSINFO_RET_OK;
 
-#undef ZBX_SIZE
-#undef ZBX_RSS
-#undef ZBX_VSIZE
-#undef ZBX_PMEM
-#undef ZBX_VMPEAK
-#undef ZBX_VMSWAP
-#undef ZBX_VMLIB
-#undef ZBX_VMLCK
-#undef ZBX_VMPIN
-#undef ZBX_VMHWM
-#undef ZBX_VMDATA
-#undef ZBX_VMSTK
-#undef ZBX_VMEXE
-#undef ZBX_VMPTE
+#undef OCT_SIZE
+#undef OCT_RSS
+#undef OCT_VSIZE
+#undef OCT_PMEM
+#undef OCT_VMPEAK
+#undef OCT_VMSWAP
+#undef OCT_VMLIB
+#undef OCT_VMLCK
+#undef OCT_VMPIN
+#undef OCT_VMHWM
+#undef OCT_VMDATA
+#undef OCT_VMSTK
+#undef OCT_VMEXE
+#undef OCT_VMPTE
 }
 
 int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
@@ -722,11 +722,11 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	struct dirent	*entries;
 	struct passwd	*usrinfo;
 	FILE		*f_cmd = NULL, *f_stat = NULL;
-	int		proccount = 0, invalid_user = 0, zbx_proc_stat;
+	int		proccount = 0, invalid_user = 0, oct_proc_stat;
 
 	if (4 < request->nparam)
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Too many parameters."));
 		return SYSINFO_RET_FAIL;
 	}
 
@@ -741,7 +741,7 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		{
 			if (0 != errno)
 			{
-				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot obtain user information: %s",
+				SET_MSG_RESULT(result, oct_dsprintf(NULL, "Cannot obtain user information: %s",
 							strerror(errno)));
 				return SYSINFO_RET_FAIL;
 			}
@@ -755,20 +755,20 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 	param = get_rparam(request, 2);
 
 	if (NULL == param || '\0' == *param || 0 == strcmp(param, "all"))
-		zbx_proc_stat = ZBX_PROC_STAT_ALL;
+		oct_proc_stat = OCT_PROC_STAT_ALL;
 	else if (0 == strcmp(param, "run"))
-		zbx_proc_stat = ZBX_PROC_STAT_RUN;
+		oct_proc_stat = OCT_PROC_STAT_RUN;
 	else if (0 == strcmp(param, "sleep"))
-		zbx_proc_stat = ZBX_PROC_STAT_SLEEP;
+		oct_proc_stat = OCT_PROC_STAT_SLEEP;
 	else if (0 == strcmp(param, "zomb"))
-		zbx_proc_stat = ZBX_PROC_STAT_ZOMB;
+		oct_proc_stat = OCT_PROC_STAT_ZOMB;
 	else if (0 == strcmp(param, "disk"))
-		zbx_proc_stat = ZBX_PROC_STAT_DISK;
+		oct_proc_stat = OCT_PROC_STAT_DISK;
 	else if (0 == strcmp(param, "trace"))
-		zbx_proc_stat = ZBX_PROC_STAT_TRACE;
+		oct_proc_stat = OCT_PROC_STAT_TRACE;
 	else
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Invalid third parameter."));
 		return SYSINFO_RET_FAIL;
 	}
 
@@ -779,24 +779,24 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (NULL == (dir = opendir("/proc")))
 	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot open /proc: %s", strerror(errno)));
+		SET_MSG_RESULT(result, oct_dsprintf(NULL, "Cannot open /proc: %s", strerror(errno)));
 		return SYSINFO_RET_FAIL;
 	}
 
 	while (NULL != (entries = readdir(dir)))
 	{
-		zbx_fclose(f_cmd);
-		zbx_fclose(f_stat);
+		oct_fclose(f_cmd);
+		oct_fclose(f_stat);
 
 		if (0 == strcmp(entries->d_name, "self"))
 			continue;
 
-		zbx_snprintf(tmp, sizeof(tmp), "/proc/%s/cmdline", entries->d_name);
+		oct_snprintf(tmp, sizeof(tmp), "/proc/%s/cmdline", entries->d_name);
 
 		if (NULL == (f_cmd = fopen(tmp, "r")))
 			continue;
 
-		zbx_snprintf(tmp, sizeof(tmp), "/proc/%s/status", entries->d_name);
+		oct_snprintf(tmp, sizeof(tmp), "/proc/%s/status", entries->d_name);
 
 		if (NULL == (f_stat = fopen(tmp, "r")))
 			continue;
@@ -810,13 +810,13 @@ int	PROC_NUM(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (FAIL == check_proccomm(f_cmd, proccomm))
 			continue;
 
-		if (FAIL == check_procstate(f_stat, zbx_proc_stat))
+		if (FAIL == check_procstate(f_stat, oct_proc_stat))
 			continue;
 
 		proccount++;
 	}
-	zbx_fclose(f_cmd);
-	zbx_fclose(f_stat);
+	oct_fclose(f_cmd);
+	oct_fclose(f_stat);
 	closedir(dir);
 out:
 	SET_UI64_RESULT(result, proccount);
@@ -845,7 +845,7 @@ static int	proc_get_process_name(pid_t pid, char **procname)
 	int	n, fd;
 	char	tmp[MAX_STRING_LEN], *pend, *pstart;
 
-	zbx_snprintf(tmp, sizeof(tmp), "/proc/%d/stat", (int)pid);
+	oct_snprintf(tmp, sizeof(tmp), "/proc/%d/stat", (int)pid);
 
 	if (-1 == (fd = open(tmp, O_RDONLY)))
 		return FAIL;
@@ -864,7 +864,7 @@ static int	proc_get_process_name(pid_t pid, char **procname)
 	if (NULL == (pstart = strchr(tmp, '(')))
 		return FAIL;
 
-	*procname = zbx_strdup(NULL, pstart + 1);
+	*procname = oct_strdup(NULL, pstart + 1);
 
 	return SUCCEED;
 }
@@ -890,10 +890,10 @@ static int	proc_get_process_cmdline(pid_t pid, char **cmdline, size_t *cmdline_n
 {
 	char	tmp[MAX_STRING_LEN];
 	int	fd, n;
-	size_t	cmdline_alloc = ZBX_KIBIBYTE;
+	size_t	cmdline_alloc = OCT_KIBIBYTE;
 
 	*cmdline_nbytes = 0;
-	zbx_snprintf(tmp, sizeof(tmp), "/proc/%d/cmdline", (int)pid);
+	oct_snprintf(tmp, sizeof(tmp), "/proc/%d/cmdline", (int)pid);
 
 	if (-1 == (fd = open(tmp, O_RDONLY)))
 		return FAIL;
@@ -930,7 +930,7 @@ static int	proc_get_process_cmdline(pid_t pid, char **cmdline, size_t *cmdline_n
 	}
 	else
 	{
-		zbx_free(*cmdline);
+		oct_free(*cmdline);
 	}
 
 	return SUCCEED;
@@ -952,11 +952,11 @@ static int	proc_get_process_cmdline(pid_t pid, char **cmdline, size_t *cmdline_n
 static int	proc_get_process_uid(pid_t pid, uid_t *uid)
 {
 	char		tmp[MAX_STRING_LEN];
-	zbx_stat_t	st;
+	oct_stat_t	st;
 
-	zbx_snprintf(tmp, sizeof(tmp), "/proc/%d", (int)pid);
+	oct_snprintf(tmp, sizeof(tmp), "/proc/%d", (int)pid);
 
-	if (0 != zbx_stat(tmp, &st))
+	if (0 != oct_stat(tmp, &st))
 		return FAIL;
 
 	*uid = st.st_uid;
@@ -977,7 +977,7 @@ static int	proc_get_process_uid(pid_t pid, uid_t *uid)
  * Return value: The length of the parsed text or FAIL if parsing failed.     *
  *                                                                            *
  ******************************************************************************/
-static int	proc_read_value(const char *ptr, zbx_uint64_t *value)
+static int	proc_read_value(const char *ptr, oct_uint64_t *value)
 {
 	const char	*start = ptr;
 	int		len;
@@ -1006,12 +1006,12 @@ static int	proc_read_value(const char *ptr, zbx_uint64_t *value)
  *               <0      - otherwise, -errno code is returned                 *
  *                                                                            *
  ******************************************************************************/
-static int	proc_read_cpu_util(zbx_procstat_util_t *procutil)
+static int	proc_read_cpu_util(oct_procstat_util_t *procutil)
 {
 	int	n, offset, fd, ret = SUCCEED;
 	char	tmp[MAX_STRING_LEN], *ptr;
 
-	zbx_snprintf(tmp, sizeof(tmp), "/proc/%d/stat", (int)procutil->pid);
+	oct_snprintf(tmp, sizeof(tmp), "/proc/%d/stat", (int)procutil->pid);
 
 	if (-1 == (fd = open(tmp, O_RDONLY)))
 		return -errno;
@@ -1083,7 +1083,7 @@ out:
  * Purpose: checks if the process name matches filter                         *
  *                                                                            *
  ******************************************************************************/
-static int	proc_match_name(const zbx_sysinfo_proc_t *proc, const char *procname)
+static int	proc_match_name(const oct_sysinfo_proc_t *proc, const char *procname)
 {
 	if (NULL == procname)
 		return SUCCEED;
@@ -1104,7 +1104,7 @@ static int	proc_match_name(const zbx_sysinfo_proc_t *proc, const char *procname)
  * Purpose: checks if the process user matches filter                         *
  *                                                                            *
  ******************************************************************************/
-static int	proc_match_user(const zbx_sysinfo_proc_t *proc, const struct passwd *usrinfo)
+static int	proc_match_user(const oct_sysinfo_proc_t *proc, const struct passwd *usrinfo)
 {
 	if (NULL == usrinfo)
 		return SUCCEED;
@@ -1122,12 +1122,12 @@ static int	proc_match_user(const zbx_sysinfo_proc_t *proc, const struct passwd *
  * Purpose: checks if the process command line matches filter                 *
  *                                                                            *
  ******************************************************************************/
-static int	proc_match_cmdline(const zbx_sysinfo_proc_t *proc, const char *cmdline)
+static int	proc_match_cmdline(const oct_sysinfo_proc_t *proc, const char *cmdline)
 {
 	if (NULL == cmdline)
 		return SUCCEED;
 
-	if (NULL != proc->cmdline && NULL != zbx_regexp_match(proc->cmdline, cmdline, NULL))
+	if (NULL != proc->cmdline && NULL != oct_regexp_match(proc->cmdline, cmdline, NULL))
 		return SUCCEED;
 
 	return FAIL;
@@ -1135,7 +1135,7 @@ static int	proc_match_cmdline(const zbx_sysinfo_proc_t *proc, const char *cmdlin
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_proc_get_process_stats                                       *
+ * Function: oct_proc_get_process_stats                                       *
  *                                                                            *
  * Purpose: get process cpu utilization data                                  *
  *                                                                            *
@@ -1143,9 +1143,9 @@ static int	proc_match_cmdline(const zbx_sysinfo_proc_t *proc, const char *cmdlin
  *             procs_num - [IN] the number of items in procs array            *
  *                                                                            *
  ******************************************************************************/
-void	zbx_proc_get_process_stats(zbx_procstat_util_t *procs, int procs_num)
+void	oct_proc_get_process_stats(oct_procstat_util_t *procs, int procs_num)
 {
-	const char	*__function_name = "zbx_proc_get_process_stats";
+	const char	*__function_name = "oct_proc_get_process_stats";
 	int	i;
 
 	SYSINFO_TRACE("In %s() procs_num:%d", __function_name, procs_num);
@@ -1169,24 +1169,24 @@ void	zbx_proc_get_process_stats(zbx_procstat_util_t *procs, int procs_num)
  *               failed.                                                      *
  *                                                                            *
  ******************************************************************************/
-static zbx_sysinfo_proc_t	*proc_create(int pid, unsigned int flags)
+static oct_sysinfo_proc_t	*proc_create(int pid, unsigned int flags)
 {
 	char			*procname = NULL, *cmdline = NULL, *name_arg0 = NULL;
 	uid_t			uid = -1;
-	zbx_sysinfo_proc_t	*proc = NULL;
+	oct_sysinfo_proc_t	*proc = NULL;
 	int			ret = FAIL;
 	size_t			cmdline_nbytes;
 
-	if (0 != (flags & ZBX_SYSINFO_PROC_USER) && SUCCEED != proc_get_process_uid(pid, &uid))
+	if (0 != (flags & OCT_SYSINFO_PROC_USER) && SUCCEED != proc_get_process_uid(pid, &uid))
 		goto out;
 
-	if (0 != (flags & (ZBX_SYSINFO_PROC_CMDLINE | ZBX_SYSINFO_PROC_NAME)) &&
+	if (0 != (flags & (OCT_SYSINFO_PROC_CMDLINE | OCT_SYSINFO_PROC_NAME)) &&
 			SUCCEED != proc_get_process_cmdline(pid, &cmdline, &cmdline_nbytes))
 	{
 		goto out;
 	}
 
-	if (0 != (flags & ZBX_SYSINFO_PROC_NAME) && SUCCEED != proc_get_process_name(pid, &procname))
+	if (0 != (flags & OCT_SYSINFO_PROC_NAME) && SUCCEED != proc_get_process_name(pid, &procname))
 		goto out;
 
 	if (NULL != cmdline)
@@ -1194,12 +1194,12 @@ static zbx_sysinfo_proc_t	*proc_create(int pid, unsigned int flags)
 		char		*ptr;
 		unsigned int	i;
 
-		if (0 != (flags & ZBX_SYSINFO_PROC_NAME))
+		if (0 != (flags & OCT_SYSINFO_PROC_NAME))
 		{
 			if (NULL == (ptr = strrchr(cmdline, '/')))
-				name_arg0 = zbx_strdup(NULL, cmdline);
+				name_arg0 = oct_strdup(NULL, cmdline);
 			else
-				name_arg0 = zbx_strdup(NULL, ptr + 1);
+				name_arg0 = oct_strdup(NULL, ptr + 1);
 		}
 
 		/* according to proc(5) the arguments are separated by '\0' */
@@ -1212,7 +1212,7 @@ static zbx_sysinfo_proc_t	*proc_create(int pid, unsigned int flags)
 out:
 	if (SUCCEED == ret)
 	{
-		proc = (zbx_sysinfo_proc_t *)realloc(NULL, sizeof(zbx_sysinfo_proc_t));
+		proc = (oct_sysinfo_proc_t *)realloc(NULL, sizeof(oct_sysinfo_proc_t));
 
 		proc->pid = pid;
 		proc->uid = uid;
@@ -1222,9 +1222,9 @@ out:
 	}
 	else
 	{
-		zbx_free(procname);
-		zbx_free(cmdline);
-		zbx_free(name_arg0);
+		oct_free(procname);
+		oct_free(cmdline);
+		oct_free(name_arg0);
 	}
 
 	return proc;
@@ -1232,7 +1232,7 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_proc_get_processes                                           *
+ * Function: oct_proc_get_processes                                           *
  *                                                                            *
  * Purpose: get system processes                                              *
  *                                                                            *
@@ -1245,14 +1245,14 @@ out:
  *                                                                            *
  ******************************************************************************/
 #if 0
-int	zbx_proc_get_processes(zbx_vector_ptr_t *processes, unsigned int flags)
+int	oct_proc_get_processes(oct_vector_ptr_t *processes, unsigned int flags)
 {
-	const char		*__function_name = "zbx_proc_get_processes";
+	const char		*__function_name = "oct_proc_get_processes";
 
 	DIR			*dir;
 	struct dirent		*entries;
 	int			ret = FAIL, pid;
-	zbx_sysinfo_proc_t	*proc;
+	oct_sysinfo_proc_t	*proc;
 
 	SYSINFO_TRACE("In %s()", __function_name);
 
@@ -1268,14 +1268,14 @@ int	zbx_proc_get_processes(zbx_vector_ptr_t *processes, unsigned int flags)
 		if (NULL == (proc = proc_create(pid, flags)))
 			continue;
 
-		zbx_vector_ptr_append(processes, proc);
+		oct_vector_ptr_append(processes, proc);
 	}
 
 	closedir(dir);
 
 	ret = SUCCEED;
 out:
-	SYSINFO_TRACE("End of %s(): %s, processes:%d", __function_name, zbx_result_string(ret),
+	SYSINFO_TRACE("End of %s(): %s, processes:%d", __function_name, oct_result_string(ret),
 			processes->values_num);
 
 	return ret;
@@ -1284,23 +1284,23 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_proc_free_processes                                          *
+ * Function: oct_proc_free_processes                                          *
  *                                                                            *
- * Purpose: frees process vector read by zbx_proc_get_processes function      *
+ * Purpose: frees process vector read by oct_proc_get_processes function      *
  *                                                                            *
  * Parameters: processes - [IN/OUT] the process vector to free                *
  *                                                                            *
  ******************************************************************************/
 #if 0
-void	zbx_proc_free_processes(zbx_vector_ptr_t *processes)
+void	oct_proc_free_processes(oct_vector_ptr_t *processes)
 {
-	zbx_vector_ptr_clear_ext(processes, (zbx_mem_free_func_t)zbx_sysinfo_proc_free);
+	oct_vector_ptr_clear_ext(processes, (oct_mem_free_func_t)oct_sysinfo_proc_free);
 }
 #endif
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_proc_get_matching_pids                                       *
+ * Function: oct_proc_get_matching_pids                                       *
  *                                                                            *
  * Purpose: get pids matching the specified process name, user name and       *
  *          command line                                                      *
@@ -1315,16 +1315,16 @@ void	zbx_proc_free_processes(zbx_vector_ptr_t *processes)
  *               -errno    - failed to read pids                              *
  *                                                                            *
  ******************************************************************************/
-void	zbx_proc_get_matching_pids(const zbx_vector_ptr_t *processes, const char *procname, const char *username,
-		const char *cmdline, zbx_uint64_t flags, zbx_vector_uint64_t *pids)
+void	oct_proc_get_matching_pids(const oct_vector_ptr_t *processes, const char *procname, const char *username,
+		const char *cmdline, oct_uint64_t flags, oct_vector_uint64_t *pids)
 {
-	const char		*__function_name = "zbx_proc_get_matching_pids";
+	const char		*__function_name = "oct_proc_get_matching_pids";
 	struct passwd		*usrinfo;
 	int			i;
-	zbx_sysinfo_proc_t	*proc;
+	oct_sysinfo_proc_t	*proc;
 
 	SYSINFO_TRACE("In %s() procname:%s username:%s cmdline:%s zone:%d", __function_name,
-			ZBX_NULL2EMPTY_STR(procname), ZBX_NULL2EMPTY_STR(username), ZBX_NULL2EMPTY_STR(cmdline), flags);
+			OCT_NULL2EMPTY_STR(procname), OCT_NULL2EMPTY_STR(username), OCT_NULL2EMPTY_STR(cmdline), flags);
 
 	if (NULL != username)
 	{
@@ -1337,7 +1337,7 @@ void	zbx_proc_get_matching_pids(const zbx_vector_ptr_t *processes, const char *p
 
 	for (i = 0; i < processes->values_num; i++)
 	{
-		proc = (zbx_sysinfo_proc_t *)processes->values[i];
+		proc = (oct_sysinfo_proc_t *)processes->values[i];
 
 		if (SUCCEED != proc_match_user(proc, usrinfo))
 			continue;
@@ -1348,7 +1348,7 @@ void	zbx_proc_get_matching_pids(const zbx_vector_ptr_t *processes, const char *p
 		if (SUCCEED != proc_match_cmdline(proc, cmdline))
 			continue;
 
-		//zbx_vector_uint64_append(pids, (zbx_uint64_t)proc->pid);
+		//oct_vector_uint64_append(pids, (oct_uint64_t)proc->pid);
 	}
 out:
 	SYSINFO_TRACE("End of %s()", __function_name);
@@ -1361,17 +1361,17 @@ int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char		*errmsg = NULL;
 	int		period, type;
 	double		value;
-	zbx_timespec_t	ts_timeout, ts;
+	oct_timespec_t	ts_timeout, ts;
 
 	/* proc.cpu.util[<procname>,<username>,(user|system),<cmdline>,(avg1|avg5|avg15)] */
 	/*                   0          1           2            3             4          */
 	if (5 < request->nparam)
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Too many parameters."));
 		return SYSINFO_RET_FAIL;
 	}
 
-	/* zbx_procstat_get_* functions expect NULL for default values -       */
+	/* oct_procstat_get_* functions expect NULL for default values -       */
 	/* convert empty procname, username and cmdline strings to NULL values */
 	if (NULL != (procname = get_rparam(request, 0)) && '\0' == *procname)
 		procname = NULL;
@@ -1385,19 +1385,19 @@ int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result)
 	/* utilization type parameter (user|system) */
 	if (NULL == (tmp = get_rparam(request, 2)) || '\0' == *tmp || 0 == strcmp(tmp, "total"))
 	{
-		type = ZBX_PROCSTAT_CPU_TOTAL;
+		type = OCT_PROCSTAT_CPU_TOTAL;
 	}
 	else if (0 == strcmp(tmp, "user"))
 	{
-		type = ZBX_PROCSTAT_CPU_USER;
+		type = OCT_PROCSTAT_CPU_USER;
 	}
 	else if (0 == strcmp(tmp, "system"))
 	{
-		type = ZBX_PROCSTAT_CPU_SYSTEM;
+		type = OCT_PROCSTAT_CPU_SYSTEM;
 	}
 	else
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Invalid third parameter."));
 		return SYSINFO_RET_FAIL;
 	}
 
@@ -1416,22 +1416,22 @@ int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result)
 	}
 	else
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Invalid fifth parameter."));
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (SUCCEED != zbx_procstat_collector_started())
+	if (SUCCEED != oct_procstat_collector_started())
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Collector is not started."));
+		SET_MSG_RESULT(result, oct_strdup(NULL, "Collector is not started."));
 		return SYSINFO_RET_FAIL;
 	}
 
-	zbx_timespec(&ts_timeout);
+	oct_timespec(&ts_timeout);
 	ts_timeout.sec += CONFIG_TIMEOUT;
 
-	while (SUCCEED != zbx_procstat_get_util(procname, username, cmdline, 0, period, type, &value, &errmsg))
+	while (SUCCEED != oct_procstat_get_util(procname, username, cmdline, 0, period, type, &value, &errmsg))
 	{
-		/* zbx_procstat_get_* functions will return FAIL when either a collection   */
+		/* oct_procstat_get_* functions will return FAIL when either a collection   */
 		/* error was registered or if less than 2 data samples were collected.      */
 		/* In the first case the errmsg will contain error message.                 */
 		if (NULL != errmsg)
@@ -1440,11 +1440,11 @@ int	PROC_CPU_UTIL(AGENT_REQUEST *request, AGENT_RESULT *result)
 			return SYSINFO_RET_FAIL;
 		}
 
-		zbx_timespec(&ts);
+		oct_timespec(&ts);
 
-		if (0 > zbx_timespec_compare(&ts_timeout, &ts))
+		if (0 > oct_timespec_compare(&ts_timeout, &ts))
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Timeout while waiting for collector data."));
+			SET_MSG_RESULT(result, oct_strdup(NULL, "Timeout while waiting for collector data."));
 			return SYSINFO_RET_FAIL;
 		}
 

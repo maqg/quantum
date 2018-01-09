@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_STATS_H
-#define ZABBIX_STATS_H
+#ifndef OCT_STATS_H
+#define OCT_STATS_H
 
 #include "threads.h"
 #include "mutexs.h"
@@ -34,32 +34,32 @@
 #	include "vmstats.h"
 #endif
 
-#ifdef ZBX_PROCSTAT_COLLECTOR
+#ifdef OCT_PROCSTAT_COLLECTOR
 #	include "procstat.h"
 #endif
 
 typedef struct
 {
-	ZBX_CPUS_STAT_DATA	cpus;
+	OCT_CPUS_STAT_DATA	cpus;
 #ifndef _WINDOWS
 	int 			diskstat_shmid;
 #endif
-#ifdef ZBX_PROCSTAT_COLLECTOR
-	zbx_dshm_t		procstat;
+#ifdef OCT_PROCSTAT_COLLECTOR
+	oct_dshm_t		procstat;
 #endif
 #ifdef _AIX
-	ZBX_VMSTAT_DATA		vmstat;
+	OCT_VMSTAT_DATA		vmstat;
 #endif
 }
-ZBX_COLLECTOR_DATA;
+OCT_COLLECTOR_DATA;
 
-extern ZBX_COLLECTOR_DATA	*collector;
+extern OCT_COLLECTOR_DATA	*collector;
 #ifndef _WINDOWS
-extern ZBX_DISKDEVICES_DATA	*diskdevices;
+extern OCT_DISKDEVICES_DATA	*diskdevices;
 extern int			my_diskstat_shmid;
 #endif
 
-ZBX_THREAD_ENTRY(collector_thread, pSemColectorStarted);
+OCT_THREAD_ENTRY(collector_thread, pSemColectorStarted);
 
 int	init_collector_data(char **error);
 void	free_collector_data(void);
@@ -67,4 +67,4 @@ void	diskstat_shm_init(void);
 void	diskstat_shm_reattach(void);
 void	diskstat_shm_extend(void);
 
-#endif	/* ZABBIX_STATS_H */
+#endif	/* OCT_STATS_H */

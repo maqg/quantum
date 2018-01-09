@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_SETPROCTITLE_H
-#define ZABBIX_SETPROCTITLE_H
+#ifndef OCT_SETPROCTITLE_H
+#define OCT_SETPROCTITLE_H
 
 #if defined(__linux__)				/* Linux */
 #       define PS_OVERWRITE_ARGV
@@ -42,4 +42,4 @@ char	**setproctitle_save_env(int argc, char **argv);
 void	setproctitle_set_status(const char *status);
 void	setproctitle_free_env(void);
 
-#endif	/* ZABBIX_SETPROCTITLE_H */
+#endif	/* OCT_SETPROCTITLE_H */

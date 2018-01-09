@@ -22,10 +22,10 @@
 
 /* scheduler support */
 
-#define ZBX_SCHEDULER_FILTER_DAY	1
-#define ZBX_SCHEDULER_FILTER_HOUR	2
-#define ZBX_SCHEDULER_FILTER_MINUTE	3
-#define ZBX_SCHEDULER_FILTER_SECOND	4
+#define OCT_SCHEDULER_FILTER_DAY	1
+#define OCT_SCHEDULER_FILTER_HOUR	2
+#define OCT_SCHEDULER_FILTER_MINUTE	3
+#define OCT_SCHEDULER_FILTER_SECOND	4
 
 typedef struct
 {
@@ -34,60 +34,60 @@ typedef struct
 	int	start_time;	/* number of seconds from the beginning of the day when period starts */
 	int	end_time;	/* number of seconds from the beginning of the day when period ends, not included */
 }
-zbx_time_period_t;
+oct_time_period_t;
 
-typedef struct zbx_flexible_interval
+typedef struct oct_flexible_interval
 {
-	zbx_time_period_t		period;
+	oct_time_period_t		period;
 	int				delay;
 
-	struct zbx_flexible_interval	*next;
+	struct oct_flexible_interval	*next;
 }
-zbx_flexible_interval_t;
+oct_flexible_interval_t;
 
-typedef struct zbx_scheduler_filter
+typedef struct oct_scheduler_filter
 {
 	int				start;
 	int				end;
 	int				step;
 
-	struct zbx_scheduler_filter	*next;
+	struct oct_scheduler_filter	*next;
 }
-zbx_scheduler_filter_t;
+oct_scheduler_filter_t;
 
-typedef struct zbx_scheduler_interval
+typedef struct oct_scheduler_interval
 {
-	zbx_scheduler_filter_t		*mdays;
-	zbx_scheduler_filter_t		*wdays;
-	zbx_scheduler_filter_t		*hours;
-	zbx_scheduler_filter_t		*minutes;
-	zbx_scheduler_filter_t		*seconds;
+	oct_scheduler_filter_t		*mdays;
+	oct_scheduler_filter_t		*wdays;
+	oct_scheduler_filter_t		*hours;
+	oct_scheduler_filter_t		*minutes;
+	oct_scheduler_filter_t		*seconds;
 
 	int				filter_level;
 
-	struct zbx_scheduler_interval	*next;
+	struct oct_scheduler_interval	*next;
 }
-zbx_scheduler_interval_t;
+oct_scheduler_interval_t;
 
-struct zbx_custom_interval
+struct oct_custom_interval
 {
-	zbx_flexible_interval_t		*flexible;
-	zbx_scheduler_interval_t	*scheduling;
+	oct_flexible_interval_t		*flexible;
+	oct_scheduler_interval_t	*scheduling;
 };
 
-static ZBX_THREAD_LOCAL volatile sig_atomic_t	zbx_timed_out;	/* 0 - no timeout occurred, 1 - SIGALRM took place */
+static OCT_THREAD_LOCAL volatile sig_atomic_t	oct_timed_out;	/* 0 - no timeout occurred, 1 - SIGALRM took place */
 
 #ifdef _WINDOWS
 
-char	ZABBIX_SERVICE_NAME[ZBX_SERVICE_NAME_LEN] = APPLICATION_NAME;
-char	ZABBIX_EVENT_SOURCE[ZBX_SERVICE_NAME_LEN] = APPLICATION_NAME;
+char	OCT_SERVICE_NAME[OCT_SERVICE_NAME_LEN] = APPLICATION_NAME;
+char	OCT_EVENT_SOURCE[OCT_SERVICE_NAME_LEN] = APPLICATION_NAME;
 
-int	__zbx_stat(const char *path, zbx_stat_t *buf)
+int	__oct_stat(const char *path, oct_stat_t *buf)
 {
 	int	ret, fd;
 	wchar_t	*wpath;
 
-	wpath = zbx_utf8_to_unicode(path);
+	wpath = oct_utf8_to_unicode(path);
 
 	if (-1 == (ret = _wstat64(wpath, buf)))
 		goto out;
@@ -106,7 +106,7 @@ int	__zbx_stat(const char *path, zbx_stat_t *buf)
 		_close(fd);
 	}
 out:
-	zbx_free(wpath);
+	oct_free(wpath);
 
 	return ret;
 }
@@ -141,7 +141,7 @@ const char	*get_program_name(const char *path)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_timespec                                                     *
+ * Function: oct_timespec                                                     *
  *                                                                            *
  * Purpose: Gets the current time.                                            *
  *                                                                            *
@@ -151,9 +151,9 @@ const char	*get_program_name(const char *path)
  *           January 1, 1970, coordinated universal time (UTC).               *
  *                                                                            *
  ******************************************************************************/
-void	zbx_timespec(zbx_timespec_t *ts)
+void	oct_timespec(oct_timespec_t *ts)
 {
-	static zbx_timespec_t	*last_ts = NULL;
+	static oct_timespec_t	*last_ts = NULL;
 	static int		corr = 0;
 #ifdef _WINDOWS
 	LARGE_INTEGER	tickPerSecond, tick;
@@ -168,7 +168,7 @@ void	zbx_timespec(zbx_timespec_t *ts)
 #endif
 
 	if (NULL == last_ts)
-		last_ts = (zbx_timespec_t *)zbx_calloc(last_ts, 1, sizeof(zbx_timespec_t));
+		last_ts = (oct_timespec_t *)oct_calloc(last_ts, 1, sizeof(oct_timespec_t));
 
 #ifdef _WINDOWS
 	if (TRUE == (rc = QueryPerformanceFrequency(&tickPerSecond)))
@@ -237,7 +237,7 @@ void	zbx_timespec(zbx_timespec_t *ts)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_time                                                         *
+ * Function: oct_time                                                         *
  *                                                                            *
  * Purpose: Gets the current time.                                            *
  *                                                                            *
@@ -249,18 +249,18 @@ void	zbx_timespec(zbx_timespec_t *ts)
  *           January 1, 1970, coordinated universal time (UTC).               *
  *                                                                            *
  ******************************************************************************/
-double	zbx_time(void)
+double	oct_time(void)
 {
-	zbx_timespec_t	ts;
+	oct_timespec_t	ts;
 
-	zbx_timespec(&ts);
+	oct_timespec(&ts);
 
 	return (double)ts.sec + 1.0e-9 * (double)ts.ns;
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_current_time                                                 *
+ * Function: oct_current_time                                                 *
  *                                                                            *
  * Purpose: Gets the current time including UTC offset                        *
  *                                                                            *
@@ -269,9 +269,9 @@ double	zbx_time(void)
  * Author: Eugene Grigorjev                                                   *
  *                                                                            *
  ******************************************************************************/
-double	zbx_current_time(void)
+double	oct_current_time(void)
 {
-	return zbx_time() + ZBX_JAN_1970_IN_SEC;
+	return oct_time() + OCT_JAN_1970_IN_SEC;
 }
 
 /******************************************************************************
@@ -289,7 +289,7 @@ static int	is_leap_year(int year)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_get_time                                                     *
+ * Function: oct_get_time                                                     *
  *                                                                            *
  * Purpose:                                                                   *
  *     get current time and store it in memory locations provided by caller   *
@@ -308,7 +308,7 @@ static int	is_leap_year(int year)
  *     this we use localtime_r() and gmtime_r().                              *
  *                                                                            *
  ******************************************************************************/
-void	zbx_get_time(struct tm *tm, long *milliseconds, zbx_timezone_t *tz)
+void	oct_get_time(struct tm *tm, long *milliseconds, oct_timezone_t *tz)
 {
 #ifdef _WINDOWS
 	struct _timeb	current_time;
@@ -326,9 +326,9 @@ void	zbx_get_time(struct tm *tm, long *milliseconds, zbx_timezone_t *tz)
 	if (NULL != tz)
 	{
 #ifdef HAVE_TM_TM_GMTOFF
-#	define ZBX_UTC_OFF	tm->tm_gmtoff
+#	define OCT_UTC_OFF	tm->tm_gmtoff
 #else
-#	define ZBX_UTC_OFF	offset
+#	define OCT_UTC_OFF	offset
 		long		offset;
 		struct tm	tm_utc;
 #ifdef _WINDOWS
@@ -345,17 +345,17 @@ void	zbx_get_time(struct tm *tm, long *milliseconds, zbx_timezone_t *tz)
 		while (tm->tm_year < tm_utc.tm_year)
 			offset -= (SUCCEED == is_leap_year(--tm_utc.tm_year) ? SEC_PER_YEAR + SEC_PER_DAY : SEC_PER_YEAR);
 #endif
-		tz->tz_sign = (0 <= ZBX_UTC_OFF ? '+' : '-');
-		tz->tz_hour = labs(ZBX_UTC_OFF) / SEC_PER_HOUR;
-		tz->tz_min = (labs(ZBX_UTC_OFF) - tz->tz_hour * SEC_PER_HOUR) / SEC_PER_MIN;
+		tz->tz_sign = (0 <= OCT_UTC_OFF ? '+' : '-');
+		tz->tz_hour = labs(OCT_UTC_OFF) / SEC_PER_HOUR;
+		tz->tz_min = (labs(OCT_UTC_OFF) - tz->tz_hour * SEC_PER_HOUR) / SEC_PER_MIN;
 		/* assuming no remaining seconds like in historic Asia/Riyadh87, Asia/Riyadh88 and Asia/Riyadh89 */
-#undef ZBX_UTC_OFF
+#undef OCT_UTC_OFF
 	}
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_utc_time                                                     *
+ * Function: oct_utc_time                                                     *
  *                                                                            *
  * Purpose: get UTC time from time from broken down time elements             *
  *                                                                            *
@@ -372,31 +372,31 @@ void	zbx_get_time(struct tm *tm, long *milliseconds, zbx_timezone_t *tz)
  *                FAIL - otherwise                                            *
  *                                                                            *
  ******************************************************************************/
-int	zbx_utc_time(int year, int mon, int mday, int hour, int min, int sec, int *t)
+int	oct_utc_time(int year, int mon, int mday, int hour, int min, int sec, int *t)
 {
 /* number of leap years before but not including year */
-#define ZBX_LEAP_YEARS(year)	(((year) - 1) / 4 - ((year) - 1) / 100 + ((year) - 1) / 400)
+#define OCT_LEAP_YEARS(year)	(((year) - 1) / 4 - ((year) - 1) / 100 + ((year) - 1) / 400)
 
 	/* days since the beginning of non-leap year till the beginning of the month */
 	static const int	month_day[12] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 	static const int	epoch_year = 1970;
 
-	if (epoch_year <= year && 1 <= mon && mon <= 12 && 1 <= mday && mday <= zbx_day_in_month(year, mon) &&
+	if (epoch_year <= year && 1 <= mon && mon <= 12 && 1 <= mday && mday <= oct_day_in_month(year, mon) &&
 			0 <= hour && hour <= 23 && 0 <= min && min <= 59 && 0 <= sec && sec <= 61 &&
 			0 <= (*t = (year - epoch_year) * SEC_PER_YEAR +
-			(ZBX_LEAP_YEARS(2 < mon ? year + 1 : year) - ZBX_LEAP_YEARS(epoch_year)) * SEC_PER_DAY +
+			(OCT_LEAP_YEARS(2 < mon ? year + 1 : year) - OCT_LEAP_YEARS(epoch_year)) * SEC_PER_DAY +
 			(month_day[mon - 1] + mday - 1) * SEC_PER_DAY + hour * SEC_PER_HOUR + min * SEC_PER_MIN + sec))
 	{
 		return SUCCEED;
 	}
 
 	return FAIL;
-#undef ZBX_LEAP_YEARS
+#undef OCT_LEAP_YEARS
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_day_in_month                                                 *
+ * Function: oct_day_in_month                                                 *
  *                                                                            *
  * Purpose: returns number of days in a month                                 *
  *                                                                            *
@@ -410,7 +410,7 @@ int	zbx_utc_time(int year, int mon, int mday, int hour, int min, int sec, int *t
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-int	zbx_day_in_month(int year, int mon)
+int	oct_day_in_month(int year, int mon)
 {
 	/* number of days in the month of a non-leap year */
 	static const unsigned char	month[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
@@ -423,7 +423,7 @@ int	zbx_day_in_month(int year, int mon)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_calloc2                                                      *
+ * Function: oct_calloc2                                                      *
  *                                                                            *
  * Purpose: allocates nmemb * size bytes of memory and fills it with zeros    *
  *                                                                            *
@@ -432,7 +432,7 @@ int	zbx_day_in_month(int year, int mon)
  * Author: Eugene Grigorjev, Rudolfs Kreicbergs                               *
  *                                                                            *
  ******************************************************************************/
-void	*zbx_calloc2(const char *filename, int line, void *old, size_t nmemb, size_t size)
+void	*oct_calloc2(const char *filename, int line, void *old, size_t nmemb, size_t size)
 {
 	int	max_attempts;
 	void	*ptr = NULL;
@@ -440,7 +440,7 @@ void	*zbx_calloc2(const char *filename, int line, void *old, size_t nmemb, size_
 	/* old pointer must be NULL */
 	if (NULL != old)
 	{
-		//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] zbx_calloc: allocating already allocated memory. "
+		//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] oct_calloc: allocating already allocated memory. "
 		//		"Please report this to Zabbix developers.",
 		//		filename, line);
 	}
@@ -454,15 +454,15 @@ void	*zbx_calloc2(const char *filename, int line, void *old, size_t nmemb, size_
 	if (NULL != ptr)
 		return ptr;
 
-	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] zbx_calloc: out of memory. Requested " ZBX_FS_SIZE_T " bytes.",
-	//		filename, line, (zbx_fs_size_t)size);
+	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] oct_calloc: out of memory. Requested " OCT_FS_SIZE_T " bytes.",
+	//		filename, line, (oct_fs_size_t)size);
 
 	exit(EXIT_FAILURE);
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_malloc2                                                      *
+ * Function: oct_malloc2                                                      *
  *                                                                            *
  * Purpose: allocates size bytes of memory                                    *
  *                                                                            *
@@ -471,7 +471,7 @@ void	*zbx_calloc2(const char *filename, int line, void *old, size_t nmemb, size_
  * Author: Eugene Grigorjev                                                   *
  *                                                                            *
  ******************************************************************************/
-void	*zbx_malloc2(const char *filename, int line, void *old, size_t size)
+void	*oct_malloc2(const char *filename, int line, void *old, size_t size)
 {
 	int	max_attempts;
 	void	*ptr = NULL;
@@ -479,7 +479,7 @@ void	*zbx_malloc2(const char *filename, int line, void *old, size_t size)
 	/* old pointer must be NULL */
 	if (NULL != old)
 	{
-		//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] zbx_malloc: allocating already allocated memory. "
+		//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] oct_malloc: allocating already allocated memory. "
 		//		"Please report this to Zabbix developers.",
 		//		filename, line);
 	}
@@ -493,15 +493,15 @@ void	*zbx_malloc2(const char *filename, int line, void *old, size_t size)
 	if (NULL != ptr)
 		return ptr;
 
-	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] zbx_malloc: out of memory. Requested " ZBX_FS_SIZE_T " bytes.",
-	//		filename, line, (zbx_fs_size_t)size);
+	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] oct_malloc: out of memory. Requested " OCT_FS_SIZE_T " bytes.",
+	//		filename, line, (oct_fs_size_t)size);
 
 	exit(EXIT_FAILURE);
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_realloc2                                                     *
+ * Function: oct_realloc2                                                     *
  *                                                                            *
  * Purpose: changes the size of the memory block pointed to by old            *
  *          to size bytes                                                     *
@@ -511,7 +511,7 @@ void	*zbx_malloc2(const char *filename, int line, void *old, size_t size)
  * Author: Eugene Grigorjev                                                   *
  *                                                                            *
  ******************************************************************************/
-void	*zbx_realloc2(const char *filename, int line, void *old, size_t size)
+void	*oct_realloc2(const char *filename, int line, void *old, size_t size)
 {
 	int	max_attempts;
 	void	*ptr = NULL;
@@ -525,18 +525,18 @@ void	*zbx_realloc2(const char *filename, int line, void *old, size_t size)
 	if (NULL != ptr)
 		return ptr;
 
-	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] zbx_realloc: out of memory. Requested " ZBX_FS_SIZE_T " bytes.",
-			//filename, line, (zbx_fs_size_t)size);
+	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] oct_realloc: out of memory. Requested " OCT_FS_SIZE_T " bytes.",
+			//filename, line, (oct_fs_size_t)size);
 
 	exit(EXIT_FAILURE);
 }
 
-char	*zbx_strdup2(const char *filename, int line, char *old, const char *str)
+char	*oct_strdup2(const char *filename, int line, char *old, const char *str)
 {
 	int	retry;
 	char	*ptr = NULL;
 
-	zbx_free(old);
+	oct_free(old);
 
 	for (retry = 10; 0 < retry && NULL == ptr; ptr = strdup(str), retry--)
 		;
@@ -544,15 +544,15 @@ char	*zbx_strdup2(const char *filename, int line, char *old, const char *str)
 	if (NULL != ptr)
 		return ptr;
 
-	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] zbx_strdup: out of memory. Requested " ZBX_FS_SIZE_T " bytes.",
-	//		filename, line, (zbx_fs_size_t)(strlen(str) + 1));
+	//zabbix_log(LOG_LEVEL_CRIT, "[file:%s,line:%d] oct_strdup: out of memory. Requested " OCT_FS_SIZE_T " bytes.",
+	//		filename, line, (oct_fs_size_t)(strlen(str) + 1));
 
 	exit(EXIT_FAILURE);
 }
 
 /****************************************************************************************
  *                                                                                      *
- * Function: zbx_guaranteed_memset                                                      *
+ * Function: oct_guaranteed_memset                                                      *
  *                                                                                      *
  * Purpose: For overwriting sensitive data in memory.                                   *
  *          Similar to memset() but should not be optimized out by a compiler.          *
@@ -563,7 +563,7 @@ char	*zbx_strdup2(const char *filename, int line, char *old, const char *str)
  *   http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf on secure_memset()       *
  *                                                                                      *
  ****************************************************************************************/
-void	*zbx_guaranteed_memset(void *v, int c, size_t n)
+void	*oct_guaranteed_memset(void *v, int c, size_t n)
 {
 	volatile signed char	*p = (volatile signed char *)v;
 
@@ -575,22 +575,22 @@ void	*zbx_guaranteed_memset(void *v, int c, size_t n)
 
 /******************************************************************************
  *                                                                            *
- * Function: __zbx_zbx_setproctitle                                           *
+ * Function: __oct_oct_setproctitle                                           *
  *                                                                            *
  * Purpose: set process title                                                 *
  *                                                                            *
  * Author: Eugene Grigorjev                                                   *
  *                                                                            *
  ******************************************************************************/
-void	__zbx_zbx_setproctitle(const char *fmt, ...)
+void	__oct_oct_setproctitle(const char *fmt, ...)
 {
 #if defined(HAVE_FUNCTION_SETPROCTITLE) || defined(PS_OVERWRITE_ARGV) || defined(PS_PSTAT_ARGV)
-	const char	*__function_name = "__zbx_zbx_setproctitle";
+	const char	*__function_name = "__oct_oct_setproctitle";
 	char		title[MAX_STRING_LEN];
 	va_list		args;
 
 	va_start(args, fmt);
-	zbx_vsnprintf(title, sizeof(title), fmt, args);
+	oct_vsnprintf(title, sizeof(title), fmt, args);
 	va_end(args);
 
 	//zabbix_log(LOG_LEVEL_DEBUG, "%s() title:'%s'", __function_name, title);
@@ -617,7 +617,7 @@ void	__zbx_zbx_setproctitle(const char *fmt, ...)
  * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
-static int	check_time_period(const zbx_time_period_t period, struct tm *tm)
+static int	check_time_period(const oct_time_period_t period, struct tm *tm)
 {
 	int		day, time;
 
@@ -644,7 +644,7 @@ static int	check_time_period(const zbx_time_period_t period, struct tm *tm)
  * Author: Alexei Vladishev, Alexander Vladishev, Aleksandrs Saveljevs        *
  *                                                                            *
  ******************************************************************************/
-static int	get_current_delay(int default_delay, const zbx_flexible_interval_t *flex_intervals, time_t now)
+static int	get_current_delay(int default_delay, const oct_flexible_interval_t *flex_intervals, time_t now)
 {
 	int		current_delay = -1;
 
@@ -678,7 +678,7 @@ static int	get_current_delay(int default_delay, const zbx_flexible_interval_t *f
  * Author: Alexei Vladishev, Alexander Vladishev, Aleksandrs Saveljevs        *
  *                                                                            *
  ******************************************************************************/
-static int	get_next_delay_interval(const zbx_flexible_interval_t *flex_intervals, time_t now, time_t *next_interval)
+static int	get_next_delay_interval(const oct_flexible_interval_t *flex_intervals, time_t now, time_t *next_interval)
 {
 	int		day, time, next = 0, candidate;
 	struct tm	*tm;
@@ -692,7 +692,7 @@ static int	get_next_delay_interval(const zbx_flexible_interval_t *flex_intervals
 
 	for (; NULL != flex_intervals; flex_intervals = flex_intervals->next)
 	{
-		const zbx_time_period_t	*p = &flex_intervals->period;
+		const oct_time_period_t	*p = &flex_intervals->period;
 
 		if (p->start_day <= day && day <= p->end_day && time < p->end_time)	/* will be active today */
 		{
@@ -791,7 +791,7 @@ static int	time_parse(int *time, const char *text, int len, int *parsed_len)
  *           Supported format is d[-d],time-time where 1 <= d <= 7            *
  *                                                                            *
  ******************************************************************************/
-static int	time_period_parse(zbx_time_period_t *period, const char *text, int len)
+static int	time_period_parse(oct_time_period_t *period, const char *text, int len)
 {
 	int	parsed_len;
 
@@ -845,7 +845,7 @@ static int	time_period_parse(zbx_time_period_t *period, const char *text, int le
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_check_time_period                                            *
+ * Function: oct_check_time_period                                            *
  *                                                                            *
  * Purpose: validate time period and check if specified time is within it     *
  *                                                                            *
@@ -863,12 +863,12 @@ static int	time_period_parse(zbx_time_period_t *period, const char *text, int le
  * Comments:   !!! Don't forget to sync code with PHP !!!                     *
  *                                                                            *
  ******************************************************************************/
-int	zbx_check_time_period(const char *period, time_t time, int *res)
+int	oct_check_time_period(const char *period, time_t time, int *res)
 {
 	int			res_total = FAIL;
 	const char		*next;
 	struct tm		*tm;
-	zbx_time_period_t	tp;
+	oct_time_period_t	tp;
 
 	tm = localtime(&time);
 
@@ -900,14 +900,14 @@ int	zbx_check_time_period(const char *period, time_t time, int *res)
  * Parameters: interval - [IN] flexible interval                              *
  *                                                                            *
  ******************************************************************************/
-static void	flexible_interval_free(zbx_flexible_interval_t *interval)
+static void	flexible_interval_free(oct_flexible_interval_t *interval)
 {
-	zbx_flexible_interval_t	*interval_next;
+	oct_flexible_interval_t	*interval_next;
 
 	for (; NULL != interval; interval = interval_next)
 	{
 		interval_next = interval->next;
-		zbx_free(interval);
+		oct_free(interval);
 	}
 }
 
@@ -928,7 +928,7 @@ static void	flexible_interval_free(zbx_flexible_interval_t *interval)
  *           Supported format is delay/period                                 *
  *                                                                            *
  ******************************************************************************/
-static int	flexible_interval_parse(zbx_flexible_interval_t *interval, const char *text, int len)
+static int	flexible_interval_parse(oct_flexible_interval_t *interval, const char *text, int len)
 {
 	const char	*ptr;
 
@@ -953,14 +953,14 @@ static int	flexible_interval_parse(zbx_flexible_interval_t *interval, const char
  * Parameters: filter - [IN] scheduler interval filter                        *
  *                                                                            *
  ******************************************************************************/
-static void	scheduler_filter_free(zbx_scheduler_filter_t *filter)
+static void	scheduler_filter_free(oct_scheduler_filter_t *filter)
 {
-	zbx_scheduler_filter_t	*filter_next;
+	oct_scheduler_filter_t	*filter_next;
 
 	for (; NULL != filter; filter = filter_next)
 	{
 		filter_next = filter->next;
-		zbx_free(filter);
+		oct_free(filter);
 	}
 }
 
@@ -973,9 +973,9 @@ static void	scheduler_filter_free(zbx_scheduler_filter_t *filter)
  * Parameters: interval - [IN] scheduler interval                             *
  *                                                                            *
  ******************************************************************************/
-static void	scheduler_interval_free(zbx_scheduler_interval_t *interval)
+static void	scheduler_interval_free(oct_scheduler_interval_t *interval)
 {
-	zbx_scheduler_interval_t	*interval_next;
+	oct_scheduler_interval_t	*interval_next;
 
 	for (; NULL != interval; interval = interval_next)
 	{
@@ -987,7 +987,7 @@ static void	scheduler_interval_free(zbx_scheduler_interval_t *interval)
 		scheduler_filter_free(interval->minutes);
 		scheduler_filter_free(interval->seconds);
 
-		zbx_free(interval);
+		oct_free(interval);
 	}
 }
 
@@ -1011,12 +1011,12 @@ static void	scheduler_interval_free(zbx_scheduler_interval_t *interval)
  * Comments: This function recursively calls itself for each filter fragment. *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_parse_filter_r(zbx_scheduler_filter_t **filter, const char *text, int *len, int min, int max,
+static int	scheduler_parse_filter_r(oct_scheduler_filter_t **filter, const char *text, int *len, int min, int max,
 		int var_len)
 {
 	int			start = 0, end = 0, step = 1;
 	const char		*pstart, *pend;
-	zbx_scheduler_filter_t	*filter_new;
+	oct_scheduler_filter_t	*filter_new;
 
 	pstart = pend = text;
 	while (0 != isdigit(*pend) && 0 < *len)
@@ -1105,7 +1105,7 @@ static int	scheduler_parse_filter_r(zbx_scheduler_filter_t **filter, const char 
 			return FAIL;
 	}
 
-	filter_new = (zbx_scheduler_filter_t *)zbx_malloc(NULL, sizeof(zbx_scheduler_filter_t));
+	filter_new = (oct_scheduler_filter_t *)oct_malloc(NULL, sizeof(oct_scheduler_filter_t));
 	filter_new->start = start;
 	filter_new->end = end;
 	filter_new->step = step;
@@ -1138,7 +1138,7 @@ static int	scheduler_parse_filter_r(zbx_scheduler_filter_t **filter, const char 
  *           parsing must fail.                                               *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_parse_filter(zbx_scheduler_filter_t **filter, const char *text, int *len, int min, int max,
+static int	scheduler_parse_filter(oct_scheduler_filter_t **filter, const char *text, int *len, int min, int max,
 		int var_len)
 {
 	if (NULL != *filter)
@@ -1161,7 +1161,7 @@ static int	scheduler_parse_filter(zbx_scheduler_filter_t **filter, const char *t
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_interval_parse(zbx_scheduler_interval_t *interval, const char *text, int len)
+static int	scheduler_interval_parse(oct_scheduler_interval_t *interval, const char *text, int len)
 {
 	int	ret = SUCCEED;
 
@@ -1177,37 +1177,37 @@ static int	scheduler_interval_parse(zbx_scheduler_interval_t *interval, const ch
 			case '\0':
 				return FAIL;
 			case 'h':
-				if (ZBX_SCHEDULER_FILTER_HOUR < interval->filter_level)
+				if (OCT_SCHEDULER_FILTER_HOUR < interval->filter_level)
 					return FAIL;
 
 				ret = scheduler_parse_filter(&interval->hours, text + 1, &len, 0, 23, 2);
-				interval->filter_level = ZBX_SCHEDULER_FILTER_HOUR;
+				interval->filter_level = OCT_SCHEDULER_FILTER_HOUR;
 
 				break;
 			case 's':
-				if (ZBX_SCHEDULER_FILTER_SECOND < interval->filter_level)
+				if (OCT_SCHEDULER_FILTER_SECOND < interval->filter_level)
 					return FAIL;
 
 				ret = scheduler_parse_filter(&interval->seconds, text + 1, &len, 0, 59, 2);
-				interval->filter_level = ZBX_SCHEDULER_FILTER_SECOND;
+				interval->filter_level = OCT_SCHEDULER_FILTER_SECOND;
 
 				break;
 			case 'w':
 				if ('d' != text[1])
 					return FAIL;
 
-				if (ZBX_SCHEDULER_FILTER_DAY < interval->filter_level)
+				if (OCT_SCHEDULER_FILTER_DAY < interval->filter_level)
 					return FAIL;
 
 				len--;
 				ret = scheduler_parse_filter(&interval->wdays, text + 2, &len, 1, 7, 1);
-				interval->filter_level = ZBX_SCHEDULER_FILTER_DAY;
+				interval->filter_level = OCT_SCHEDULER_FILTER_DAY;
 
 				break;
 			case 'm':
 				if ('d' == text[1])
 				{
-					if (ZBX_SCHEDULER_FILTER_DAY < interval->filter_level ||
+					if (OCT_SCHEDULER_FILTER_DAY < interval->filter_level ||
 							NULL != interval->wdays)
 					{
 						return FAIL;
@@ -1215,15 +1215,15 @@ static int	scheduler_interval_parse(zbx_scheduler_interval_t *interval, const ch
 
 					len--;
 					ret = scheduler_parse_filter(&interval->mdays, text + 2, &len, 1, 31, 2);
-					interval->filter_level = ZBX_SCHEDULER_FILTER_DAY;
+					interval->filter_level = OCT_SCHEDULER_FILTER_DAY;
 				}
 				else
 				{
-					if (ZBX_SCHEDULER_FILTER_MINUTE < interval->filter_level)
+					if (OCT_SCHEDULER_FILTER_MINUTE < interval->filter_level)
 						return FAIL;
 
 					ret = scheduler_parse_filter(&interval->minutes, text + 1, &len, 0, 59, 2);
-					interval->filter_level = ZBX_SCHEDULER_FILTER_MINUTE;
+					interval->filter_level = OCT_SCHEDULER_FILTER_MINUTE;
 				}
 
 				break;
@@ -1251,9 +1251,9 @@ static int	scheduler_interval_parse(zbx_scheduler_interval_t *interval, const ch
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_get_nearest_filter_value(const zbx_scheduler_filter_t *filter, int *value)
+static int	scheduler_get_nearest_filter_value(const oct_scheduler_filter_t *filter, int *value)
 {
-	const zbx_scheduler_filter_t	*filter_next = NULL;
+	const oct_scheduler_filter_t	*filter_next = NULL;
 
 	for (; NULL != filter; filter = filter->next)
 	{
@@ -1304,7 +1304,7 @@ static int	scheduler_get_nearest_filter_value(const zbx_scheduler_filter_t *filt
  *                         found in the current month                         *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_get_wday_nextcheck(const zbx_scheduler_interval_t *interval, struct tm *tm)
+static int	scheduler_get_wday_nextcheck(const oct_scheduler_interval_t *interval, struct tm *tm)
 {
 	int	value_now, value_next;
 
@@ -1348,10 +1348,10 @@ static int	scheduler_get_wday_nextcheck(const zbx_scheduler_interval_t *interval
  *               FAIL    - otherwise                                          *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_validate_wday_filter(const zbx_scheduler_interval_t *interval, struct tm *tm)
+static int	scheduler_validate_wday_filter(const oct_scheduler_interval_t *interval, struct tm *tm)
 {
 	time_t				nextcheck;
-	const zbx_scheduler_filter_t	*filter;
+	const oct_scheduler_filter_t	*filter;
 	int				value;
 
 	if (NULL == interval->wdays)
@@ -1398,7 +1398,7 @@ static int	scheduler_validate_wday_filter(const zbx_scheduler_interval_t *interv
  *                         found in the current month                         *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_get_day_nextcheck(const zbx_scheduler_interval_t *interval, struct tm *tm)
+static int	scheduler_get_day_nextcheck(const oct_scheduler_interval_t *interval, struct tm *tm)
 {
 	/* first check if the provided tm structure has valid date format */
 	if (-1 == mktime(tm))
@@ -1430,7 +1430,7 @@ static int	scheduler_get_day_nextcheck(const zbx_scheduler_interval_t *interval,
  * Purpose: calculates the time/day that satisfies the specified filter       *
  *                                                                            *
  * Parameters: interval - [IN] the scheduler interval                         *
- *             level    - [IN] the filter level, see ZBX_SCHEDULER_FILTER_*   *
+ *             level    - [IN] the filter level, see OCT_SCHEDULER_FILTER_*   *
  *                        defines                                             *
  *             tm       - [IN/OUT] the input/output date & time               *
  *                                                                            *
@@ -1439,27 +1439,27 @@ static int	scheduler_get_day_nextcheck(const zbx_scheduler_interval_t *interval,
  *                         filter level                                       *
  *                                                                            *
  ******************************************************************************/
-static int	scheduler_get_filter_nextcheck(const zbx_scheduler_interval_t *interval, int level, struct tm *tm)
+static int	scheduler_get_filter_nextcheck(const oct_scheduler_interval_t *interval, int level, struct tm *tm)
 {
-	const zbx_scheduler_filter_t	*filter;
+	const oct_scheduler_filter_t	*filter;
 	int				max, *value;
 
 	/* initialize data depending on filter level */
 	switch (level)
 	{
-		case ZBX_SCHEDULER_FILTER_DAY:
+		case OCT_SCHEDULER_FILTER_DAY:
 			return scheduler_get_day_nextcheck(interval, tm);
-		case ZBX_SCHEDULER_FILTER_HOUR:
+		case OCT_SCHEDULER_FILTER_HOUR:
 			max = 23;
 			filter = interval->hours;
 			value = &tm->tm_hour;
 			break;
-		case ZBX_SCHEDULER_FILTER_MINUTE:
+		case OCT_SCHEDULER_FILTER_MINUTE:
 			max = 59;
 			filter = interval->minutes;
 			value = &tm->tm_min;
 			break;
-		case ZBX_SCHEDULER_FILTER_SECOND:
+		case OCT_SCHEDULER_FILTER_SECOND:
 			max = 59;
 			filter = interval->seconds;
 			value = &tm->tm_sec;
@@ -1501,11 +1501,11 @@ static int	scheduler_get_filter_nextcheck(const zbx_scheduler_interval_t *interv
  *             tm       - [IN/OUT] the input/output date & time               *
  *                                                                            *
  ******************************************************************************/
-static void	scheduler_apply_day_filter(zbx_scheduler_interval_t *interval, struct tm *tm)
+static void	scheduler_apply_day_filter(oct_scheduler_interval_t *interval, struct tm *tm)
 {
 	int	day = tm->tm_mday, mon = tm->tm_mon, year = tm->tm_year;
 
-	while (SUCCEED != scheduler_get_filter_nextcheck(interval, ZBX_SCHEDULER_FILTER_DAY, tm))
+	while (SUCCEED != scheduler_get_filter_nextcheck(interval, OCT_SCHEDULER_FILTER_DAY, tm))
 	{
 		if (11 < ++tm->tm_mon)
 		{
@@ -1536,11 +1536,11 @@ static void	scheduler_apply_day_filter(zbx_scheduler_interval_t *interval, struc
  *             tm       - [IN/OUT] the input/output date & time               *
  *                                                                            *
  ******************************************************************************/
-static void	scheduler_apply_hour_filter(zbx_scheduler_interval_t *interval, struct tm *tm)
+static void	scheduler_apply_hour_filter(oct_scheduler_interval_t *interval, struct tm *tm)
 {
 	int	hour = tm->tm_hour;
 
-	while (SUCCEED != scheduler_get_filter_nextcheck(interval, ZBX_SCHEDULER_FILTER_HOUR, tm))
+	while (SUCCEED != scheduler_get_filter_nextcheck(interval, OCT_SCHEDULER_FILTER_HOUR, tm))
 	{
 		tm->tm_mday++;
 		tm->tm_hour = 0;
@@ -1568,11 +1568,11 @@ static void	scheduler_apply_hour_filter(zbx_scheduler_interval_t *interval, stru
  *             tm       - [IN/OUT] the input/output date & time               *
  *                                                                            *
  ******************************************************************************/
-static void	scheduler_apply_minute_filter(zbx_scheduler_interval_t *interval, struct tm *tm)
+static void	scheduler_apply_minute_filter(oct_scheduler_interval_t *interval, struct tm *tm)
 {
 	int	min = tm->tm_min;
 
-	while (SUCCEED != scheduler_get_filter_nextcheck(interval, ZBX_SCHEDULER_FILTER_MINUTE, tm))
+	while (SUCCEED != scheduler_get_filter_nextcheck(interval, OCT_SCHEDULER_FILTER_MINUTE, tm))
 	{
 		tm->tm_hour++;
 		tm->tm_min = 0;
@@ -1597,9 +1597,9 @@ static void	scheduler_apply_minute_filter(zbx_scheduler_interval_t *interval, st
  *             tm       - [IN/OUT] the input/output date & time               *
  *                                                                            *
  ******************************************************************************/
-static void	scheduler_apply_second_filter(zbx_scheduler_interval_t *interval, struct tm *tm)
+static void	scheduler_apply_second_filter(oct_scheduler_interval_t *interval, struct tm *tm)
 {
-	while (SUCCEED != scheduler_get_filter_nextcheck(interval, ZBX_SCHEDULER_FILTER_SECOND, tm))
+	while (SUCCEED != scheduler_get_filter_nextcheck(interval, OCT_SCHEDULER_FILTER_SECOND, tm))
 	{
 		tm->tm_min++;
 		tm->tm_sec = 0;
@@ -1622,7 +1622,7 @@ static void	scheduler_apply_second_filter(zbx_scheduler_interval_t *interval, st
  * Return Value: Timestamp when the next check must be scheduled.             *
  *                                                                            *
  ******************************************************************************/
-static time_t	scheduler_get_nextcheck(zbx_scheduler_interval_t *interval, time_t now)
+static time_t	scheduler_get_nextcheck(oct_scheduler_interval_t *interval, time_t now)
 {
 	struct tm	tm_start, tm;
 	time_t		nextcheck = 0, current_nextcheck;
@@ -1650,7 +1650,7 @@ static time_t	scheduler_get_nextcheck(zbx_scheduler_interval_t *interval, time_t
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_interval_preproc                                             *
+ * Function: oct_interval_preproc                                             *
  *                                                                            *
  * Purpose: parses item and low-level discovery rule update interval          *
  *                                                                            *
@@ -1667,16 +1667,16 @@ static time_t	scheduler_get_nextcheck(zbx_scheduler_interval_t *interval, time_t
  *             SimpleInterval, {";", FlexibleInterval | SchedulingInterval};  *
  *                                                                            *
  ******************************************************************************/
-int	zbx_interval_preproc(const char *interval_str, int *simple_interval, zbx_custom_interval_t **custom_intervals,
+int	oct_interval_preproc(const char *interval_str, int *simple_interval, oct_custom_interval_t **custom_intervals,
 		char **error)
 {
-	zbx_flexible_interval_t		*flexible = NULL;
-	zbx_scheduler_interval_t	*scheduling = NULL;
+	oct_flexible_interval_t		*flexible = NULL;
+	oct_scheduler_interval_t	*scheduling = NULL;
 	const char			*delim, *interval_type;
 	int				ret;
 
 	if (SUCCEED != (ret = is_time_suffix(interval_str, simple_interval,
-			(int)(NULL == (delim = strchr(interval_str, ';')) ? ZBX_LENGTH_UNLIMITED : delim - interval_str))))
+			(int)(NULL == (delim = strchr(interval_str, ';')) ? OCT_LENGTH_UNLIMITED : delim - interval_str))))
 	{
 		interval_type = "update";
 		goto out;
@@ -1692,14 +1692,14 @@ int	zbx_interval_preproc(const char *interval_str, int *simple_interval, zbx_cus
 
 		if (0 != isdigit(*interval_str))
 		{
-			zbx_flexible_interval_t	*new_interval;
+			oct_flexible_interval_t	*new_interval;
 
-			new_interval = (zbx_flexible_interval_t *)zbx_malloc(NULL, sizeof(zbx_flexible_interval_t));
+			new_interval = (oct_flexible_interval_t *)oct_malloc(NULL, sizeof(oct_flexible_interval_t));
 
 			if (SUCCEED != (ret = flexible_interval_parse(new_interval, interval_str,
 					(NULL == delim ? (int)strlen(interval_str) : (int)(delim - interval_str)))))
 			{
-				zbx_free(new_interval);
+				oct_free(new_interval);
 				interval_type = "flexible";
 				goto out;
 			}
@@ -1709,15 +1709,15 @@ int	zbx_interval_preproc(const char *interval_str, int *simple_interval, zbx_cus
 		}
 		else
 		{
-			zbx_scheduler_interval_t	*new_interval;
+			oct_scheduler_interval_t	*new_interval;
 
-			new_interval = (zbx_scheduler_interval_t *)zbx_malloc(NULL, sizeof(zbx_scheduler_interval_t));
-			memset(new_interval, 0, sizeof(zbx_scheduler_interval_t));
+			new_interval = (oct_scheduler_interval_t *)oct_malloc(NULL, sizeof(oct_scheduler_interval_t));
+			memset(new_interval, 0, sizeof(oct_scheduler_interval_t));
 
 			if (SUCCEED != (ret = scheduler_interval_parse(new_interval, interval_str,
 					(NULL == delim ? (int)strlen(interval_str) : (int)(delim - interval_str)))))
 			{
-				zbx_free(new_interval);
+				oct_free(new_interval);
 				interval_type = "scheduling";
 				goto out;
 			}
@@ -1731,7 +1731,7 @@ out:
 	{
 		if (NULL != error)
 		{
-			*error = zbx_dsprintf(*error, "Invalid %s interval \"%.*s\".", interval_type,
+			*error = oct_dsprintf(*error, "Invalid %s interval \"%.*s\".", interval_type,
 					(NULL == delim ? (int)strlen(interval_str) : (int)(delim - interval_str)),
 					interval_str);
 		}
@@ -1741,7 +1741,7 @@ out:
 	}
 	else if (NULL != custom_intervals)
 	{
-		*custom_intervals = (zbx_custom_interval_t *)zbx_malloc(NULL, sizeof(zbx_custom_interval_t));
+		*custom_intervals = (oct_custom_interval_t *)oct_malloc(NULL, sizeof(oct_custom_interval_t));
 		(*custom_intervals)->flexible = flexible;
 		(*custom_intervals)->scheduling = scheduling;
 	}
@@ -1751,18 +1751,18 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_custom_interval_free                                         *
+ * Function: oct_custom_interval_free                                         *
  *                                                                            *
  * Purpose: frees custom update intervals                                     *
  *                                                                            *
  * Parameters: custom_intervals - [IN] custom intervals                       *
  *                                                                            *
  ******************************************************************************/
-void	zbx_custom_interval_free(zbx_custom_interval_t *custom_intervals)
+void	oct_custom_interval_free(oct_custom_interval_t *custom_intervals)
 {
 	flexible_interval_free(custom_intervals->flexible);
 	scheduler_interval_free(custom_intervals->scheduling);
-	zbx_free(custom_intervals);
+	oct_free(custom_intervals);
 }
 
 /******************************************************************************
@@ -1790,18 +1790,18 @@ void	zbx_custom_interval_free(zbx_custom_interval_t *custom_intervals)
  *           New one: preserve period, if delay==5, nextcheck = 0,5,10,15,... *
  *                                                                            *
  ******************************************************************************/
-int	calculate_item_nextcheck(zbx_uint64_t seed, int item_type, int simple_interval,
-		const zbx_custom_interval_t *custom_intervals, time_t now)
+int	calculate_item_nextcheck(oct_uint64_t seed, int item_type, int simple_interval,
+		const oct_custom_interval_t *custom_intervals, time_t now)
 {
 	int	nextcheck = 0;
 
 	/* special processing of active items to see better view in queue */
-	if (ITEM_TYPE_ZABBIX_ACTIVE == item_type)
+	if (ITEM_TYPE_OCT_ACTIVE == item_type)
 	{
 		if (0 != simple_interval)
 			nextcheck = (int)now + simple_interval;
 		else
-			nextcheck = ZBX_JAN_2038;
+			nextcheck = OCT_JAN_2038;
 	}
 	else
 	{
@@ -1830,7 +1830,7 @@ int	calculate_item_nextcheck(zbx_uint64_t seed, int item_type, int simple_interv
 			if (0 != current_delay)
 			{
 				nextcheck = current_delay * (int)(t / (time_t)current_delay) +
-						(int)(seed % (zbx_uint64_t)current_delay);
+						(int)(seed % (oct_uint64_t)current_delay);
 
 				if (0 == attempt)
 				{
@@ -1844,7 +1844,7 @@ int	calculate_item_nextcheck(zbx_uint64_t seed, int item_type, int simple_interv
 				}
 			}
 			else
-				nextcheck = ZBX_JAN_2038;
+				nextcheck = OCT_JAN_2038;
 
 			if (NULL == custom_intervals)
 				break;
@@ -1884,7 +1884,7 @@ int	calculate_item_nextcheck(zbx_uint64_t seed, int item_type, int simple_interv
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-time_t	calculate_proxy_nextcheck(zbx_uint64_t hostid, unsigned int delay, time_t now)
+time_t	calculate_proxy_nextcheck(oct_uint64_t hostid, unsigned int delay, time_t now)
 {
 	time_t	nextcheck;
 
@@ -1945,7 +1945,7 @@ int	is_ip4(const char *ip)
 	if (3 == dots && 1 <= digits && 3 >= digits && 255 >= octet)
 		res = SUCCEED;
 
-	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(res));
+	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, oct_result_string(res));
 
 	return res;
 }
@@ -2012,7 +2012,7 @@ int	is_ip6(const char *ip)
 	else
 		res = FAIL;
 
-	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(res));
+	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, oct_result_string(res));
 
 	return res;
 }
@@ -2063,7 +2063,7 @@ int	is_ip(const char *ip)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_validate_hostname                                            *
+ * Function: oct_validate_hostname                                            *
  *                                                                            *
  * Purpose: check if string is a valid internet hostname                      *
  *                                                                            *
@@ -2078,10 +2078,10 @@ int	is_ip(const char *ip)
  *         - underscores ('_') allowed in domain name, but not in hostname.   *
  *                                                                            *
  ******************************************************************************/
-int	zbx_validate_hostname(const char *hostname)
+int	oct_validate_hostname(const char *hostname)
 {
 	int		component;	/* periods ('.') are only allowed when they serve to delimit components */
-	int		len = MAX_ZBX_DNSNAME_LEN;
+	int		len = MAX_OCT_DNSNAME_LEN;
 	const char	*p;
 
 	/* the first character must be an alphanumeric character */
@@ -2124,7 +2124,7 @@ int	ip_in_list(const char *list, const char *ip)
 	const char	*__function_name = "ip_in_list";
 
 	int		ipaddress[8];
-	zbx_iprange_t	iprange;
+	oct_iprange_t	iprange;
 	char		*address = NULL;
 	size_t		address_alloc = 0, address_offset;
 	const char	*ptr;
@@ -2135,7 +2135,7 @@ int	ip_in_list(const char *list, const char *ip)
 	if (SUCCEED != iprange_parse(&iprange, ip))
 		goto out;
 #ifndef HAVE_IPV6
-	if (ZBX_IPRANGE_V6 == iprange.type)
+	if (OCT_IPRANGE_V6 == iprange.type)
 		goto out;
 #endif
 	iprange_first(&iprange, ipaddress);
@@ -2146,12 +2146,12 @@ int	ip_in_list(const char *list, const char *ip)
 			ptr = list + strlen(list);
 
 		address_offset = 0;
-		zbx_strncpy_alloc(&address, &address_alloc, &address_offset, list, ptr - list);
+		oct_strncpy_alloc(&address, &address_alloc, &address_offset, list, ptr - list);
 
 		if (SUCCEED != iprange_parse(&iprange, address))
 			continue;
 #ifndef HAVE_IPV6
-		if (ZBX_IPRANGE_V6 == iprange.type)
+		if (OCT_IPRANGE_V6 == iprange.type)
 			continue;
 #endif
 		if (SUCCEED == iprange_validate(&iprange, ipaddress))
@@ -2161,9 +2161,9 @@ int	ip_in_list(const char *list, const char *ip)
 		}
 	}
 
-	zbx_free(address);
+	oct_free(address);
 out:
-	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, oct_result_string(ret));
 
 	return ret;
 }
@@ -2227,14 +2227,14 @@ int	int_in_list(char *list, int value)
 	if (NULL != end)
 		*end = c;
 
-	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, zbx_result_string(ret));
+	//zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __function_name, oct_result_string(ret));
 
 	return ret;
 }
 
-int	zbx_double_compare(double a, double b)
+int	oct_double_compare(double a, double b)
 {
-	return fabs(a - b) < ZBX_DOUBLE_EPSILON ? SUCCEED : FAIL;
+	return fabs(a - b) < OCT_DOUBLE_EPSILON ? SUCCEED : FAIL;
 }
 
 /******************************************************************************
@@ -2245,7 +2245,7 @@ int	zbx_double_compare(double a, double b)
  *                                                                            *
  * Parameters: str   - string to check                                        *
  *             flags - extra options including:                               *
- *                       ZBX_FLAG_DOUBLE_SUFFIX - allow suffixes              *
+ *                       OCT_FLAG_DOUBLE_SUFFIX - allow suffixes              *
  *                                                                            *
  * Return value:  SUCCEED - the string is double                              *
  *                FAIL - otherwise                                            *
@@ -2277,7 +2277,7 @@ int	is_double_suffix(const char *str, unsigned char flags)
 		}
 
 		/* last character is suffix */
-		if (0 != (flags & ZBX_FLAG_DOUBLE_SUFFIX) && NULL != strchr(ZBX_UNIT_SYMBOLS, str[i]) && '\0' == str[i + 1])
+		if (0 != (flags & OCT_FLAG_DOUBLE_SUFFIX) && NULL != strchr(OCT_UNIT_SYMBOLS, str[i]) && '\0' == str[i + 1])
 			continue;
 
 		return FAIL;
@@ -2358,7 +2358,7 @@ int	is_double(const char *str)
  * Parameters: str    - [IN] string to check                                  *
  *             value  - [OUT] a pointer to converted value (optional)         *
  *             length - [IN] number of characters to validate, pass           *
- *                      ZBX_LENGTH_UNLIMITED to validate full string          *
+ *                      OCT_LENGTH_UNLIMITED to validate full string          *
  *                                                                            *
  * Return value: SUCCEED - the string is valid and within reasonable limits   *
  *               FAIL    - otherwise                                          *
@@ -2416,7 +2416,7 @@ int	is_time_suffix(const char *str, int *value, int length)
 		len--;
 	}
 
-	if ((ZBX_LENGTH_UNLIMITED == length && '\0' != *str) || (ZBX_LENGTH_UNLIMITED != length && 0 != len))
+	if ((OCT_LENGTH_UNLIMITED == length && '\0' != *str) || (OCT_LENGTH_UNLIMITED != length && 0 != len))
 		return FAIL;
 
 	if (max / factor < value_tmp)
@@ -2430,7 +2430,7 @@ int	is_time_suffix(const char *str, int *value, int length)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_time2bool                                                    *
+ * Function: oct_time2bool                                                    *
  *                                                                            *
  * Purpose: check if the string is a zero with or without time suffix         *
  *                                                                            *
@@ -2441,11 +2441,11 @@ int	is_time_suffix(const char *str, int *value, int length)
  *                     with time unit suffix at all                           *
  *                                                                            *
  ******************************************************************************/
-unsigned char	zbx_time2bool(const char *value_raw)
+unsigned char	oct_time2bool(const char *value_raw)
 {
 	int	value;
 
-	if (SUCCEED != is_time_suffix(value_raw, &value, ZBX_LENGTH_UNLIMITED))
+	if (SUCCEED != is_time_suffix(value_raw, &value, OCT_LENGTH_UNLIMITED))
 		return 1;
 
 	return 0 != value;
@@ -2511,7 +2511,7 @@ int	is_int_prefix(const char *str)
  *          range and optionally store it into value parameter                *
  *                                                                            *
  * Parameters: str   - [IN] string to check                                   *
- *             n     - [IN] string length or ZBX_MAX_UINT64_LEN               *
+ *             n     - [IN] string length or OCT_MAX_UINT64_LEN               *
  *             value - [OUT] a pointer to output buffer where the converted   *
  *                     value is to be written (optional, can be NULL)         *
  *             size  - [IN] size of the output buffer (optional)              *
@@ -2525,12 +2525,12 @@ int	is_int_prefix(const char *str)
  * Author: Alexander Vladishev, Andris Zeila                                  *
  *                                                                            *
  ******************************************************************************/
-int	is_uint_n_range(const char *str, size_t n, void *value, size_t size, zbx_uint64_t min, zbx_uint64_t max)
+int	is_uint_n_range(const char *str, size_t n, void *value, size_t size, oct_uint64_t min, oct_uint64_t max)
 {
-	zbx_uint64_t		value_uint64 = 0, c;
-	const zbx_uint64_t	max_uint64 = ~(zbx_uint64_t)__UINT64_C(0);
+	oct_uint64_t		value_uint64 = 0, c;
+	const oct_uint64_t	max_uint64 = ~(oct_uint64_t)__UINT64_C(0);
 
-	if ('\0' == *str || 0 == n || sizeof(zbx_uint64_t) < size || (0 == size && NULL != value))
+	if ('\0' == *str || 0 == n || sizeof(oct_uint64_t) < size || (0 == size && NULL != value))
 		return FAIL;
 
 	while ('\0' != *str && 0 < n--)
@@ -2538,7 +2538,7 @@ int	is_uint_n_range(const char *str, size_t n, void *value, size_t size, zbx_uin
 		if (0 == isdigit(*str))
 			return FAIL;	/* not a digit */
 
-		c = (zbx_uint64_t)(unsigned char)(*str - '0');
+		c = (oct_uint64_t)(unsigned char)(*str - '0');
 
 		if ((max_uint64 - c) / 10 < value_uint64)
 			return FAIL;	/* maximum value exceeded */
@@ -2557,7 +2557,7 @@ int	is_uint_n_range(const char *str, size_t n, void *value, size_t size, zbx_uin
 		/* of 'value' buffer while on big endian architecture it will be stored starting from the last */
 		/* bytes. We handle it by storing the offset in the most significant byte of short value and   */
 		/* then use the first byte as source offset.                                                   */
-		unsigned short	value_offset = (unsigned short)((sizeof(zbx_uint64_t) - size) << 8);
+		unsigned short	value_offset = (unsigned short)((sizeof(oct_uint64_t) - size) << 8);
 
 		memcpy(value, (unsigned char *)&value_uint64 + *((unsigned char *)&value_offset), size);
 	}
@@ -2585,13 +2585,13 @@ int	is_uint_n_range(const char *str, size_t n, void *value, size_t size, zbx_uin
  *                       is outside the specified range                       *
  *                                                                            *
  ******************************************************************************/
-int	is_hex_n_range(const char *str, size_t n, void *value, size_t size, zbx_uint64_t min, zbx_uint64_t max)
+int	is_hex_n_range(const char *str, size_t n, void *value, size_t size, oct_uint64_t min, oct_uint64_t max)
 {
-	zbx_uint64_t		value_uint64 = 0, c;
-	const zbx_uint64_t	max_uint64 = ~(zbx_uint64_t)__UINT64_C(0);
+	oct_uint64_t		value_uint64 = 0, c;
+	const oct_uint64_t	max_uint64 = ~(oct_uint64_t)__UINT64_C(0);
 	int			len = 0;
 
-	if ('\0' == *str || 0 == n || sizeof(zbx_uint64_t) < size || (0 == size && NULL != value))
+	if ('\0' == *str || 0 == n || sizeof(oct_uint64_t) < size || (0 == size && NULL != value))
 		return FAIL;
 
 	while ('\0' != *str && 0 < n--)
@@ -2621,7 +2621,7 @@ int	is_hex_n_range(const char *str, size_t n, void *value, size_t size, zbx_uint
 		/* of 'value' buffer while on big endian architecture it will be stored starting from the last */
 		/* bytes. We handle it by storing the offset in the most significant byte of short value and   */
 		/* then use the first byte as source offset.                                                   */
-		unsigned short	value_offset = (unsigned short)((sizeof(zbx_uint64_t) - size) << 8);
+		unsigned short	value_offset = (unsigned short)((sizeof(oct_uint64_t) - size) << 8);
 
 		memcpy(value, (unsigned char *)&value_uint64 + *((unsigned char *)&value_offset), size);
 	}
@@ -2645,7 +2645,7 @@ int	is_hex_n_range(const char *str, size_t n, void *value, size_t size, zbx_uint
  * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
-int	is_boolean(const char *str, zbx_uint64_t *value)
+int	is_boolean(const char *str, oct_uint64_t *value)
 {
 	int	res;
 
@@ -2656,7 +2656,7 @@ int	is_boolean(const char *str, zbx_uint64_t *value)
 		char	tmp[16];
 
 		strscpy(tmp, str);
-		zbx_strlower(tmp);
+		oct_strlower(tmp);
 
 		if (SUCCEED == (res = str_in_list("true,t,yes,y,on,up,running,enabled,available", tmp, ',')))
 			*value = 1;
@@ -2798,10 +2798,10 @@ int	is_hex_string(const char *str)
  *               that the array is still sorted                               *
  *                                                                            *
  ******************************************************************************/
-int	get_nearestindex(const void *p, size_t sz, int num, zbx_uint64_t id)
+int	get_nearestindex(const void *p, size_t sz, int num, oct_uint64_t id)
 {
 	int		first_index, last_index, index;
-	zbx_uint64_t	element_id;
+	oct_uint64_t	element_id;
 
 	if (0 == num)
 		return 0;
@@ -2813,7 +2813,7 @@ int	get_nearestindex(const void *p, size_t sz, int num, zbx_uint64_t id)
 	{
 		index = first_index + (last_index - first_index) / 2;
 
-		if (id == (element_id = *(const zbx_uint64_t *)((const char *)p + index * sz)))
+		if (id == (element_id = *(const oct_uint64_t *)((const char *)p + index * sz)))
 			return index;
 
 		if (last_index == first_index)
@@ -2839,11 +2839,11 @@ int	get_nearestindex(const void *p, size_t sz, int num, zbx_uint64_t id)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-int	uint64_array_add(zbx_uint64_t **values, int *alloc, int *num, zbx_uint64_t value, int alloc_step)
+int	uint64_array_add(oct_uint64_t **values, int *alloc, int *num, oct_uint64_t value, int alloc_step)
 {
 	int	index;
 
-	index = get_nearestindex(*values, sizeof(zbx_uint64_t), *num, value);
+	index = get_nearestindex(*values, sizeof(oct_uint64_t), *num, value);
 	if (index < (*num) && (*values)[index] == value)
 		return index;
 
@@ -2851,15 +2851,15 @@ int	uint64_array_add(zbx_uint64_t **values, int *alloc, int *num, zbx_uint64_t v
 	{
 		if (0 == alloc_step)
 		{
-			zbx_error("Unable to reallocate buffer");
+			oct_error("Unable to reallocate buffer");
 			assert(0);
 		}
 
 		*alloc += alloc_step;
-		*values = (zbx_uint64_t *)zbx_realloc(*values, *alloc * sizeof(zbx_uint64_t));
+		*values = (oct_uint64_t *)oct_realloc(*values, *alloc * sizeof(oct_uint64_t));
 	}
 
-	memmove(&(*values)[index + 1], &(*values)[index], sizeof(zbx_uint64_t) * (*num - index));
+	memmove(&(*values)[index + 1], &(*values)[index], sizeof(oct_uint64_t) * (*num - index));
 
 	(*values)[index] = value;
 	(*num)++;
@@ -2874,11 +2874,11 @@ int	uint64_array_add(zbx_uint64_t **values, int *alloc, int *num, zbx_uint64_t v
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-int	uint64_array_exists(const zbx_uint64_t *values, int num, zbx_uint64_t value)
+int	uint64_array_exists(const oct_uint64_t *values, int num, oct_uint64_t value)
 {
 	int	index;
 
-	index = get_nearestindex(values, sizeof(zbx_uint64_t), num, value);
+	index = get_nearestindex(values, sizeof(oct_uint64_t), num, value);
 	if (index < num && values[index] == value)
 		return SUCCEED;
 
@@ -2894,33 +2894,33 @@ int	uint64_array_exists(const zbx_uint64_t *values, int num, zbx_uint64_t value)
  * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
-void	uint64_array_remove(zbx_uint64_t *values, int *num, const zbx_uint64_t *rm_values, int rm_num)
+void	uint64_array_remove(oct_uint64_t *values, int *num, const oct_uint64_t *rm_values, int rm_num)
 {
 	int	rindex, index;
 
 	for (rindex = 0; rindex < rm_num; rindex++)
 	{
-		index = get_nearestindex(values, sizeof(zbx_uint64_t), *num, rm_values[rindex]);
+		index = get_nearestindex(values, sizeof(oct_uint64_t), *num, rm_values[rindex]);
 		if (index == *num || values[index] != rm_values[rindex])
 			continue;
 
-		memmove(&values[index], &values[index + 1], sizeof(zbx_uint64_t) * ((*num) - index - 1));
+		memmove(&values[index], &values[index + 1], sizeof(oct_uint64_t) * ((*num) - index - 1));
 		(*num)--;
 	}
 }
 
-zbx_uint64_t	suffix2factor(char c)
+oct_uint64_t	suffix2factor(char c)
 {
 	switch (c)
 	{
 		case 'K':
-			return ZBX_KIBIBYTE;
+			return OCT_KIBIBYTE;
 		case 'M':
-			return ZBX_MEBIBYTE;
+			return OCT_MEBIBYTE;
 		case 'G':
-			return ZBX_GIBIBYTE;
+			return OCT_GIBIBYTE;
 		case 'T':
-			return ZBX_TEBIBYTE;
+			return OCT_TEBIBYTE;
 		case 's':
 			return 1;
 		case 'm':
@@ -2953,12 +2953,12 @@ zbx_uint64_t	suffix2factor(char c)
  * Comments: the function automatically processes suffixes K, M, G, T         *
  *                                                                            *
  ******************************************************************************/
-int	str2uint64(const char *str, const char *suffixes, zbx_uint64_t *value)
+int	str2uint64(const char *str, const char *suffixes, oct_uint64_t *value)
 {
 	size_t		sz;
 	const char	*p;
 	int		ret;
-	zbx_uint64_t	factor = 1;
+	oct_uint64_t	factor = 1;
 
 	sz = strlen(str);
 	p = str + sz - 1;
@@ -3200,7 +3200,7 @@ unsigned char	get_interface_type_by_item_type(unsigned char type)
 {
 	switch (type)
 	{
-		case ITEM_TYPE_ZABBIX:
+		case ITEM_TYPE_OCT:
 			return INTERFACE_TYPE_AGENT;
 		case ITEM_TYPE_SNMPv1:
 		case ITEM_TYPE_SNMPv2c:
@@ -3289,11 +3289,11 @@ int	parse_serveractive_element(char *str, char **host, unsigned short *port, uns
 		if (SUCCEED != is_ip6(str))
 			goto fail;
 
-		*host = zbx_strdup(*host, str);
+		*host = oct_strdup(*host, str);
 	}
 	else if (SUCCEED == is_ip6(str))
 	{
-		*host = zbx_strdup(*host, str);
+		*host = oct_strdup(*host, str);
 	}
 	else
 	{
@@ -3306,7 +3306,7 @@ int	parse_serveractive_element(char *str, char **host, unsigned short *port, uns
 			*r2 = '\0';
 		}
 
-		*host = zbx_strdup(NULL, str);
+		*host = oct_strdup(NULL, str);
 #ifdef HAVE_IPV6
 	}
 #endif
@@ -3323,35 +3323,35 @@ fail:
 	return res;
 }
 
-void	zbx_alarm_flag_set(void)
+void	oct_alarm_flag_set(void)
 {
-	zbx_timed_out = 1;
+	oct_timed_out = 1;
 }
 
-void	zbx_alarm_flag_clear(void)
+void	oct_alarm_flag_clear(void)
 {
-	zbx_timed_out = 0;
+	oct_timed_out = 0;
 }
 
 #if !defined(_WINDOWS)
-unsigned int	zbx_alarm_on(unsigned int seconds)
+unsigned int	oct_alarm_on(unsigned int seconds)
 {
-	zbx_alarm_flag_clear();
+	oct_alarm_flag_clear();
 
 	return alarm(seconds);
 }
 
-unsigned int	zbx_alarm_off(void)
+unsigned int	oct_alarm_off(void)
 {
 	unsigned int	ret;
 
 	ret = alarm(0);
-	zbx_alarm_flag_clear();
+	oct_alarm_flag_clear();
 	return ret;
 }
 #endif
 
-int	zbx_alarm_timed_out(void)
+int	oct_alarm_timed_out(void)
 {
-	return (0 == zbx_timed_out ? FAIL : SUCCEED);
+	return (0 == oct_timed_out ? FAIL : SUCCEED);
 }

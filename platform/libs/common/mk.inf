@@ -4,6 +4,6 @@ LINKS = *.c
 OCT_CFLAGS := $(OCT_CFLAGS) -Wall -I$(MIPS_INCLUDE)
 
 SRCS = alias.c comms.c file.c iprange.c misc.c \
-	setproctitle.c str.c variant.c xml.c zbxgetopt.c
+	setproctitle.c str.c variant.c xml.c octgetopt.c
 
 TARGET = oct_common

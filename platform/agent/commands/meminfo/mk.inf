@@ -7,7 +7,6 @@ TARGET = meminfo
 SRCS = meminfo.c
 
 
-
 LIBS =  -lm -ldl -lrt  -lresolv -lpcreposix -lpcre \
 		$(TOPDIR)/lib/liboct_log.a \
 		$(TOPDIR)/lib/liboct_sysinfo.a \

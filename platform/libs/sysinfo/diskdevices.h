@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_DISKDEVICES_H
-#define ZABBIX_DISKDEVICES_H
+#ifndef OCT_DISKDEVICES_H
+#define OCT_DISKDEVICES_H
 
 #ifdef _WINDOWS
 #	error "This module allowed only for Unix OS"
@@ -33,31 +33,31 @@ typedef struct c_single_diskdevice_data
 	char		name[32];
 	int		index;
 	time_t		clock[MAX_COLLECTOR_HISTORY];
-	zbx_uint64_t	r_sect[MAX_COLLECTOR_HISTORY];
-	zbx_uint64_t	r_oper[MAX_COLLECTOR_HISTORY];
-	zbx_uint64_t	r_byte[MAX_COLLECTOR_HISTORY];
-	zbx_uint64_t	w_sect[MAX_COLLECTOR_HISTORY];
-	zbx_uint64_t	w_oper[MAX_COLLECTOR_HISTORY];
-	zbx_uint64_t	w_byte[MAX_COLLECTOR_HISTORY];
-	double		r_sps[ZBX_AVG_COUNT];
-	double		r_ops[ZBX_AVG_COUNT];
-	double		r_bps[ZBX_AVG_COUNT];
-	double		w_sps[ZBX_AVG_COUNT];
-	double		w_ops[ZBX_AVG_COUNT];
-	double		w_bps[ZBX_AVG_COUNT];
-} ZBX_SINGLE_DISKDEVICE_DATA;
+	oct_uint64_t	r_sect[MAX_COLLECTOR_HISTORY];
+	oct_uint64_t	r_oper[MAX_COLLECTOR_HISTORY];
+	oct_uint64_t	r_byte[MAX_COLLECTOR_HISTORY];
+	oct_uint64_t	w_sect[MAX_COLLECTOR_HISTORY];
+	oct_uint64_t	w_oper[MAX_COLLECTOR_HISTORY];
+	oct_uint64_t	w_byte[MAX_COLLECTOR_HISTORY];
+	double		r_sps[OCT_AVG_COUNT];
+	double		r_ops[OCT_AVG_COUNT];
+	double		r_bps[OCT_AVG_COUNT];
+	double		w_sps[OCT_AVG_COUNT];
+	double		w_ops[OCT_AVG_COUNT];
+	double		w_bps[OCT_AVG_COUNT];
+} OCT_SINGLE_DISKDEVICE_DATA;
 
 typedef struct c_diskdevices_data
 {
 	int				count;		/* number of disks to collect statistics for */
 	int				max_diskdev;	/* number of "slots" for disk statistics */
-	ZBX_SINGLE_DISKDEVICE_DATA	device[1];	/* more "slots" for disk statistics added dynamically */
-} ZBX_DISKDEVICES_DATA;
+	OCT_SINGLE_DISKDEVICE_DATA	device[1];	/* more "slots" for disk statistics added dynamically */
+} OCT_DISKDEVICES_DATA;
 
-#define DISKDEVICE_COLLECTOR_STARTED(collector)	((collector) && (collector)->diskstat_shmid != ZBX_NONEXISTENT_SHMID)
+#define DISKDEVICE_COLLECTOR_STARTED(collector)	((collector) && (collector)->diskstat_shmid != OCT_NONEXISTENT_SHMID)
 
-ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_get(const char *devname);
-ZBX_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_add(const char *devname);
+OCT_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_get(const char *devname);
+OCT_SINGLE_DISKDEVICE_DATA	*collector_diskdevice_add(const char *devname);
 void				collect_stats_diskdevices(void);
 
 #endif

@@ -17,12 +17,12 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_ALIAS_H
-#define ZABBIX_ALIAS_H
+#ifndef OCT_ALIAS_H
+#define OCT_ALIAS_H
 
-typedef struct zbx_alias
+typedef struct oct_alias
 {
-	struct zbx_alias	*next;
+	struct oct_alias	*next;
 	char			*name;
 	char			*value;
 }
@@ -31,6 +31,6 @@ ALIAS;
 void		test_aliases(void);
 void		add_alias(const char *name, const char *value);
 void		alias_list_free(void);
-const char	*zbx_alias_get(const char *orig);
+const char	*oct_alias_get(const char *orig);
 
-#endif	/* ZABBIX_ALIAS_H */
+#endif	/* OCT_ALIAS_H */

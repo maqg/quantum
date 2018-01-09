@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_CPUSTAT_H
-#define ZABBIX_CPUSTAT_H
+#ifndef OCT_CPUSTAT_H
+#define OCT_CPUSTAT_H
 
 #include "sysinfo.h"
 #include "octalgo.h"
@@ -28,11 +28,11 @@
 
 typedef struct
 {
-	zbx_perf_counter_data_t	**cpu_counter;
-	zbx_perf_counter_data_t	*queue_counter;
+	oct_perf_counter_data_t	**cpu_counter;
+	oct_perf_counter_data_t	*queue_counter;
 	int			count;
 }
-ZBX_CPUS_STAT_DATA;
+OCT_CPUS_STAT_DATA;
 
 #define CPU_COLLECTOR_STARTED(collector)	((collector) && (collector)->cpus.queue_counter)
 
@@ -42,7 +42,7 @@ int	get_cpu_perf_counter_value(int cpu_num, int interval, double *value, char **
 
 typedef struct
 {
-	zbx_uint64_t	h_counter[ZBX_CPU_STATE_COUNT][MAX_COLLECTOR_HISTORY];
+	oct_uint64_t	h_counter[OCT_CPU_STATE_COUNT][MAX_COLLECTOR_HISTORY];
 	unsigned char	h_status[MAX_COLLECTOR_HISTORY];
 #if (MAX_COLLECTOR_HISTORY % 8) > 0
 	unsigned char	padding0[8 - (MAX_COLLECTOR_HISTORY % 8)];	/* for 8-byte alignment */
@@ -52,32 +52,32 @@ typedef struct
 	int		cpu_num;
 	int		padding1;	/* for 8-byte alignment */
 }
-ZBX_SINGLE_CPU_STAT_DATA;
+OCT_SINGLE_CPU_STAT_DATA;
 
 typedef struct
 {
-	ZBX_SINGLE_CPU_STAT_DATA	*cpu;
+	OCT_SINGLE_CPU_STAT_DATA	*cpu;
 	int				count;
 }
-ZBX_CPUS_STAT_DATA;
+OCT_CPUS_STAT_DATA;
 
 #define CPU_COLLECTOR_STARTED(collector)	(collector)
 
-void	collect_cpustat(ZBX_CPUS_STAT_DATA *pcpus);
+void	collect_cpustat(OCT_CPUS_STAT_DATA *pcpus);
 int	get_cpustat(AGENT_RESULT *result, int cpu_num, int state, int mode);
 
 #endif	/* _WINDOWS */
 
-int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus);
-void	free_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus);
+int	init_cpu_collector(OCT_CPUS_STAT_DATA *pcpus);
+void	free_cpu_collector(OCT_CPUS_STAT_DATA *pcpus);
 
-#define ZBX_CPUNUM_UNDEF	-1	/* unidentified yet CPUs */
-#define ZBX_CPUNUM_ALL		-2	/* request data for all CPUs */
+#define OCT_CPUNUM_UNDEF	-1	/* unidentified yet CPUs */
+#define OCT_CPUNUM_ALL		-2	/* request data for all CPUs */
 
-#define ZBX_CPU_STATUS_ONLINE	0
-#define ZBX_CPU_STATUS_OFFLINE	1
-#define ZBX_CPU_STATUS_UNKNOWN	2
+#define OCT_CPU_STATUS_ONLINE	0
+#define OCT_CPU_STATUS_OFFLINE	1
+#define OCT_CPU_STATUS_UNKNOWN	2
 
-int	get_cpus(zbx_vector_uint64_pair_t *vector);
+int	get_cpus(oct_vector_uint64_pair_t *vector);
 
 #endif

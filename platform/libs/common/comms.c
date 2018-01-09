@@ -113,7 +113,7 @@ int	comms_parse_response(char *xml, char *host, size_t host_len, char *key, size
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_htole_uint64                                                 *
+ * Function: oct_htole_uint64                                                 *
  *                                                                            *
  * Purpose: convert unsigned integer 64 bit                                   *
  *          from host byte order                                              *
@@ -128,7 +128,7 @@ int	comms_parse_response(char *xml, char *host, size_t host_len, char *key, size
  * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
-zbx_uint64_t	zbx_htole_uint64(zbx_uint64_t data)
+oct_uint64_t	oct_htole_uint64(oct_uint64_t data)
 {
 	unsigned char	buf[8];
 
@@ -148,7 +148,7 @@ zbx_uint64_t	zbx_htole_uint64(zbx_uint64_t data)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_letoh_uint64                                                 *
+ * Function: oct_letoh_uint64                                                 *
  *                                                                            *
  * Purpose: convert unsigned integer 64 bit                                   *
  *          from little-endian byte order format                              *
@@ -163,20 +163,20 @@ zbx_uint64_t	zbx_htole_uint64(zbx_uint64_t data)
  * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
-zbx_uint64_t	zbx_letoh_uint64(zbx_uint64_t data)
+oct_uint64_t	oct_letoh_uint64(oct_uint64_t data)
 {
 	unsigned char	buf[8];
 
 	memcpy(buf, &data, sizeof(buf));
 
-	data  = (zbx_uint64_t)buf[7];	data <<= 8;
-	data |= (zbx_uint64_t)buf[6];	data <<= 8;
-	data |= (zbx_uint64_t)buf[5];	data <<= 8;
-	data |= (zbx_uint64_t)buf[4];	data <<= 8;
-	data |= (zbx_uint64_t)buf[3];	data <<= 8;
-	data |= (zbx_uint64_t)buf[2];	data <<= 8;
-	data |= (zbx_uint64_t)buf[1];	data <<= 8;
-	data |= (zbx_uint64_t)buf[0];
+	data  = (oct_uint64_t)buf[7];	data <<= 8;
+	data |= (oct_uint64_t)buf[6];	data <<= 8;
+	data |= (oct_uint64_t)buf[5];	data <<= 8;
+	data |= (oct_uint64_t)buf[4];	data <<= 8;
+	data |= (oct_uint64_t)buf[3];	data <<= 8;
+	data |= (oct_uint64_t)buf[2];	data <<= 8;
+	data |= (oct_uint64_t)buf[1];	data <<= 8;
+	data |= (oct_uint64_t)buf[0];
 
 	return data;
 }

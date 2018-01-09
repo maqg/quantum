@@ -636,13 +636,13 @@
 #define VERSION "4.0.0alpha2"
 
 /* Define to 1 on linux and solaris platforms */
-#define ZBX_PROCSTAT_COLLECTOR 1 
+#define OCT_PROCSTAT_COLLECTOR 1 
 
 /* Define integer field name in union 'sigval' of struct 'siginfo_t' */
-#define ZBX_SIVAL_INT sival_int
+#define OCT_SIVAL_INT sival_int
 
 /* Define actual socklen_t parameter type in socket functions. */
-#define ZBX_SOCKLEN_T socklen_t
+#define OCT_SOCKLEN_T socklen_t
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE

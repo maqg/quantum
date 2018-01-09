@@ -32,17 +32,17 @@ static int	cu_clean_empty()
 static void	cu_test_macro_expresssion(const char *expression, const char *macro, const char *context, int success)
 {
 	int		macro_r, context_l, context_r, ret;
-	zbx_strloc_t    mloc;
-	char		description[ZBX_KIBIBYTE * 64];
+	oct_strloc_t    mloc;
+	char		description[OCT_KIBIBYTE * 64];
 
-	zbx_snprintf(description, sizeof(description), "expression '%s'", expression);
+	oct_snprintf(description, sizeof(description), "expression '%s'", expression);
 
-	ret = zbx_user_macro_parse(expression, &macro_r, &context_l, &context_r);
-	ZBX_CU_ASSERT_INT_EQ_FATAL(description, ret, success);
+	ret = oct_user_macro_parse(expression, &macro_r, &context_l, &context_r);
+	OCT_CU_ASSERT_INT_EQ_FATAL(description, ret, success);
 
 	if (FAIL != ret)
 	{
-		ZBX_CU_ASSERT_CHAR_EQ_FATAL(description, expression[macro_r], '}');
+		OCT_CU_ASSERT_CHAR_EQ_FATAL(description, expression[macro_r], '}');
 
 		mloc.l = 2;
 
@@ -58,25 +58,25 @@ static void	cu_test_macro_expresssion(const char *expression, const char *macro,
 		else
 			mloc.r = macro_r - 1;
 
-		ZBX_CU_ASSERT_STRINGN_EQ_FATAL(description, expression + 2, macro,  mloc.r - mloc.l + 1);
-		ZBX_CU_ASSERT_INT_EQ_FATAL(description, strlen(macro), mloc.r - mloc.l + 1);
+		OCT_CU_ASSERT_STRINGN_EQ_FATAL(description, expression + 2, macro,  mloc.r - mloc.l + 1);
+		OCT_CU_ASSERT_INT_EQ_FATAL(description, strlen(macro), mloc.r - mloc.l + 1);
 
 		if (NULL != context)
 		{
-			ZBX_CU_ASSERT_INT_NE_FATAL(description, context_l, 0);
-			ZBX_CU_ASSERT_STRINGN_EQ_FATAL(description, expression + context_l, context,
+			OCT_CU_ASSERT_INT_NE_FATAL(description, context_l, 0);
+			OCT_CU_ASSERT_STRINGN_EQ_FATAL(description, expression + context_l, context,
 					context_r - context_l + 1);
-			ZBX_CU_ASSERT_INT_EQ_FATAL(description, strlen(context), (size_t)context_r - context_l + 1);
+			OCT_CU_ASSERT_INT_EQ_FATAL(description, strlen(context), (size_t)context_r - context_l + 1);
 
 		}
 		else
-			ZBX_CU_ASSERT_INT_EQ_FATAL("context", context_l, 0);
+			OCT_CU_ASSERT_INT_EQ_FATAL("context", context_l, 0);
 	}
 }
 
-static void	test_zbx_user_macro_parse()
+static void	test_oct_user_macro_parse()
 {
-	struct zbx_user_macrotest_data_t
+	struct oct_user_macrotest_data_t
 	{
 		const char	*expression;
 		const char	*macro;
@@ -85,7 +85,7 @@ static void	test_zbx_user_macro_parse()
 	};
 
 	size_t				i;
-	struct zbx_user_macrotest_data_t	user_macro_parse_test_cases[] = {
+	struct oct_user_macrotest_data_t	user_macro_parse_test_cases[] = {
 			{"", NULL, NULL, FAIL},
 			{"{", NULL, NULL, FAIL},
 			{"}", NULL, NULL, FAIL},
@@ -120,7 +120,7 @@ static void	test_zbx_user_macro_parse()
 			{"{$A: \"{$B}\" }", "A", "\"{$B}\"", SUCCEED}
 			};
 
-	ZBX_CU_LEAK_CHECK_START();
+	OCT_CU_LEAK_CHECK_START();
 
 	for (i = 0; ARRSIZE(user_macro_parse_test_cases) > i; i++)
 	{
@@ -129,18 +129,18 @@ static void	test_zbx_user_macro_parse()
 				user_macro_parse_test_cases[i].success);
 	}
 
-	ZBX_CU_LEAK_CHECK_END();
+	OCT_CU_LEAK_CHECK_END();
 }
 
-int	ZBX_CU_DECLARE(str_test)
+int	OCT_CU_DECLARE(str_test)
 {
 	CU_pSuite	suite = NULL;
 
-	/* test suite: zbx_user_macro_parse() */
-	if (NULL == (suite = CU_add_suite("zbx_user_macro_parse", cu_init_empty, cu_clean_empty)))
+	/* test suite: oct_user_macro_parse() */
+	if (NULL == (suite = CU_add_suite("oct_user_macro_parse", cu_init_empty, cu_clean_empty)))
 		return CU_get_error();
 
-	ZBX_CU_ADD_TEST(suite, test_zbx_user_macro_parse);
+	OCT_CU_ADD_TEST(suite, test_oct_user_macro_parse);
 
 	return CUE_SUCCESS;
 }
