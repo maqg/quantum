@@ -20,7 +20,7 @@
 #ifndef OCT_SYSINC_H
 #define OCT_SYSINC_H
 
-#include "config.h"
+#include "sysconfig.h"
 
 #ifdef HAVE_STDIO_H
 #	include <stdio.h>
