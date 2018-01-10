@@ -26,18 +26,15 @@
 #include <fcntl.h>
 #include <openssl/md5.h>
 
-#include "common.h"
 #include "oct_types.h"
 #include "event.h"
 #include "json.h"
 #include "oct_json.h"
 
-#include "proc.h"
-
 #define SET_UI64_RESULT(res, val)		\
 (						\
 	(res)->type |= CR_UINT64,		\
-	(res)->ui64 = (oct_uint64_t)(val)	\
+	(res)->ui64 = (__u64)(val)	\
 )
 
 #define SET_DBL_RESULT(res, val)		\
@@ -69,7 +66,7 @@
 typedef struct cmd_result {
 	int ret; // 0 OK, 1 ERROR
 	int type; // unsigned int 0, string 1, double, 2, longlong 3
-	oct_uint64_t ui64;
+	__u64 ui64;
 	double dbl;
 	char *str;
 	char *msg; /* possible error message */
@@ -97,7 +94,7 @@ void cmd_result_free(CMD_RESULT *result)
 	} while(0)
 #endif
 
-int VM_MEMORY_TOTAL(oct_uint64_t *data)
+int VM_MEMORY_TOTAL(__u64 *data)
 {
 	struct sysinfo info;
 
@@ -111,7 +108,7 @@ int VM_MEMORY_TOTAL(oct_uint64_t *data)
 	return 0;
 }
 
-int VM_MEMORY_FREE(oct_uint64_t *data)
+int VM_MEMORY_FREE(__u64 *data)
 {
 	struct sysinfo info;
 
@@ -124,7 +121,7 @@ int VM_MEMORY_FREE(oct_uint64_t *data)
 	return 0;
 }
 
-int VM_MEMORY_BUFFERS(oct_uint64_t *data)
+int VM_MEMORY_BUFFERS(__u64 *data)
 {
 	struct sysinfo info;
 
@@ -137,10 +134,89 @@ int VM_MEMORY_BUFFERS(oct_uint64_t *data)
 	return 0;
 }
 
-int VM_MEMORY_CACHED(oct_uint64_t *data)
+int oct_rtrim(char *str, const char *charlist)
+{
+	char *p;
+	int count = 0; 
+
+	if (NULL == str || '\0' == *str)
+		return count; 
+
+	for (p = str + strlen(str) - 1; p >= str && NULL != strchr(charlist, *p); p--) {       
+		*p = '\0';
+		count++;
+	}   
+
+	return count;
+}
+
+static int byte_value_from_proc_file_ex(FILE *f, const char *label,
+		const char *guard, __u64 *bytes)
+{
+	char	buf[CMD_MAX_LEN], *p_value, *p_unit;
+	size_t	label_len, guard_len;
+	long	pos = 0;
+	int	ret = NOTSUPPORTED;
+
+	label_len = strlen(label);
+	p_value = buf + label_len;
+
+	if (NULL != guard)
+	{
+		guard_len = strlen(guard);
+		pos = ftell(f);
+	}
+
+	while (NULL != fgets(buf, (int)sizeof(buf), f))
+	{
+		if (NULL != guard)
+		{
+			if (0 == strncmp(buf, guard, guard_len))
+			{
+				fseek(f, pos, SEEK_SET);
+				break;
+			}
+
+			pos = ftell(f);
+		}
+
+		if (0 != strncmp(buf, label, label_len))
+			continue;
+
+		if (NULL == (p_unit = strrchr(p_value, ' ')))
+		{
+			ret = FAIL;
+			break;
+		}
+
+		*p_unit++ = '\0';
+
+		while (' ' == *p_value)
+			p_value++;
+
+		oct_rtrim(p_unit, "\n");
+
+		if (0 == strcasecmp(p_unit, "kB"))
+			*bytes <<= 10;
+		else if (0 == strcasecmp(p_unit, "mB"))
+			*bytes <<= 20;
+		else if (0 == strcasecmp(p_unit, "GB"))
+			*bytes <<= 30;
+		else if (0 == strcasecmp(p_unit, "TB"))
+			*bytes <<= 40;
+
+		ret = SUCCEED;
+		break;
+	}
+
+	return ret;
+}
+
+
+int VM_MEMORY_CACHED(__u64 *data)
 {
 	FILE *f;
-	oct_uint64_t value;
+	__u64 value;
 	int res;
 
 	if (NULL == (f = fopen("/proc/meminfo", "r"))) {
@@ -148,7 +224,7 @@ int VM_MEMORY_CACHED(oct_uint64_t *data)
 		return -1;
 	}
 
-	if (FAIL == (res = byte_value_from_proc_file(f, "Cached:", NULL, &value))) {
+	if (FAIL == (res = byte_value_from_proc_file_ex(f, "Cached:", NULL, &value))) {
 		MEMINFO_TRACE("Cannot obtain the value of Cached from /proc/meminfo.");
 		goto close;
 	}
@@ -165,7 +241,7 @@ close:
 	return 0;
 }
 
-int VM_MEMORY_USED(oct_uint64_t *data)
+int VM_MEMORY_USED(__u64 *data)
 {
 	struct sysinfo  info;
 
@@ -173,7 +249,7 @@ int VM_MEMORY_USED(oct_uint64_t *data)
 		return -1;
 	}
 
-	*data = (oct_uint64_t)((info.totalram - info.freeram) * info.mem_unit);
+	*data = (__u64)((info.totalram - info.freeram) * info.mem_unit);
 
 	return 0;
 }
@@ -196,10 +272,10 @@ int VM_MEMORY_PUSED(double *data)
 	return 0;
 }
 
-int VM_MEMORY_AVAILABLE(oct_uint64_t *data)
+int VM_MEMORY_AVAILABLE(__u64 *data)
 {
 	FILE        *f;
-	oct_uint64_t    value;
+	__u64    value;
 	struct sysinfo  info;
 	int     res, ret = -1;
 
@@ -208,7 +284,7 @@ int VM_MEMORY_AVAILABLE(oct_uint64_t *data)
 		return -1;
 	}
 
-	if (FAIL == (res = byte_value_from_proc_file(f, "MemAvailable:", "Cached:", &value))) {
+	if (FAIL == (res = byte_value_from_proc_file_ex(f, "MemAvailable:", "Cached:", &value))) {
 		MEMINFO_TRACE("Cannot obtain the value of MemAvailable from /proc/meminfo.");
 		goto close;
 	}
@@ -219,7 +295,7 @@ int VM_MEMORY_AVAILABLE(oct_uint64_t *data)
 		goto close;
 	}
 
-	if (FAIL == (res = byte_value_from_proc_file(f, "Cached:", NULL, &value))) {
+	if (FAIL == (res = byte_value_from_proc_file_ex(f, "Cached:", NULL, &value))) {
 		MEMINFO_TRACE("Cannot obtain the value of Cached from /proc/meminfo.");
 		goto close;
 	}
@@ -231,20 +307,20 @@ int VM_MEMORY_AVAILABLE(oct_uint64_t *data)
 		goto close;
 	}
 
-	*data = (oct_uint64_t)(info.freeram + info.bufferram) * info.mem_unit + value;
+	*data = (__u64)(info.freeram + info.bufferram) * info.mem_unit + value;
 	ret = 0;
 
 close:
-	oct_fclose(f);
+	fclose(f);
 
 	return ret;
 }
 
-static int VM_MEMORY_PAVAILABLE(double *data)
+int VM_MEMORY_PAVAILABLE(double *data)
 {
 	int ret = -1;
 	struct sysinfo info;
-	oct_uint64_t available, total;
+	__u64 available, total;
 
 	if (0 != sysinfo(&info)) {
 		return -1;
@@ -256,7 +332,7 @@ static int VM_MEMORY_PAVAILABLE(double *data)
 		goto clean;
 	}
 
-	total = (oct_uint64_t)info.totalram * info.mem_unit;
+	total = (__u64)info.totalram * info.mem_unit;
 	if (0 == total) {
 		MEMINFO_TRACE("Cannot calculate percentage because total is zero.");
 		ret = -1;
@@ -270,7 +346,7 @@ clean:
 	return ret;
 }
 
-int VM_MEMORY_SHARED(oct_uint64_t *mem)
+int VM_MEMORY_SHARED(__u64 *mem)
 {
 	MEMINFO_TRACE("Supported for Linux 2.4 only.");
 	*mem = 0;
@@ -280,8 +356,8 @@ int VM_MEMORY_SHARED(oct_uint64_t *mem)
 struct json_object *VM_MEMORY_INFO(void)
 {
 	int ret;
-	oct_uint64_t cache;
-	oct_uint64_t available;
+	__u64 cache;
+	__u64 available;
 
 	struct sysinfo info;
 	struct json_object *meminfo = json_create();
@@ -294,7 +370,7 @@ struct json_object *VM_MEMORY_INFO(void)
 	json_add_longvalue(meminfo, (char *)"total", info.totalram * info.mem_unit);
 	json_add_longvalue(meminfo, (char *)"free", info.freeram * info.mem_unit);
 	json_add_longvalue(meminfo, (char *)"buffer", info.bufferram * info.mem_unit);
-	json_add_longvalue(meminfo, (char *)"used", (oct_uint64_t)((info.totalram - info.freeram) * info.mem_unit));
+	json_add_longvalue(meminfo, (char *)"used", (__u64)((info.totalram - info.freeram) * info.mem_unit));
 	json_add_longvalue(meminfo, (char *)"shared", 0);
 
 	json_add_longvalue(meminfo, (char *)"freeSwap", info.freeswap * info.mem_unit);

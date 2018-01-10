@@ -1,9 +1,0 @@
-CCMODE = STATICLIB
-
-OCT_CFLAGS := $(OCT_CFLAGS) -Wall -I$(MIPS_INCLUDE)
-
-SRCS = regexp.c
-
-TARGET = oct_regexp
-
-LIBS = $(TOPDIR)/lib/liboct_log.a

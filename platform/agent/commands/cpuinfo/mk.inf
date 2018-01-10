@@ -6,4 +6,5 @@ TARGET = cpuinfo
 
 SRCS = cpuinfo.c
 
-LIBS = $(TOPDIR)/lib/liboct_log.a
+LIBS = $(TOPDIR)/lib/liboct_log.a \
+	   $(TOPDIR)/lib/liboct_json.a

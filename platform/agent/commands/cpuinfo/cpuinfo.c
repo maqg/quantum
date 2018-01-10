@@ -25,6 +25,8 @@
 #include <openssl/md5.h>
 
 #include "oct_types.h"
+#include "json.h"
+#include "oct_json.h"
 #include "event.h"
 
 #ifndef CPUINFO_TRACE
@@ -35,22 +37,49 @@
 	} while(0)
 #endif
 
-int main(int argc, char *argv[])
+int SYSTEM_CPU_NUM(int *num)
 {
-	char cmd[OCT_CMD_LEN];
-
-	if (argc != 2) {
-		printf("Usage: ./oct_md5 filepath\n");
-		exit(0);
+	int name = _SC_NPROCESSORS_ONLN;
+	//int name = _SC_NPROCESSORS_CONF;
+	
+	if (-1 == (*num = sysconf(name))) {
+		CPUINFO_TRACE("fetch cpu num error\n");
+		return -1;
 	}
 
-	if (access(argv[1], R_OK)) {
-		printf("file %s not exist\n", argv[1]);
+	return 0;
+}
+
+struct json_object *SYSTEM_CPU_INFO(void)
+{
+	int ncpu;
+
+	struct json_object *cpuinfo;
+
+	if (SYSTEM_CPU_NUM(&ncpu)) {
+		CPUINFO_TRACE("got cpu number by syscof error\n");
+		return NULL;
+	}
+
+	cpuinfo = json_create();
+	json_add_u32value(cpuinfo, (char *)"ncpu", ncpu);
+
+	return cpuinfo;
+}
+
+int main(int argc, char *argv[])
+{
+	struct json_object *cpuinfo;
+
+	cpuinfo = SYSTEM_CPU_INFO();
+	if (!cpuinfo) {
+		PRINT_CMD_RESULT_ERR("got cpu info error");
 		return 1;
 	}
 
-	sprintf(cmd, "md5sum %s | awk -F' ' '{ print $1 }'", argv[1]);
-	system(cmd);
+	CPUINFO_TRACE("got cpu info [%s]\n", json_2string(cpuinfo));
+
+	PRINT_CMD_RESULT_OK(cpuinfo);
 
 	return 0;
 }

@@ -12,6 +12,7 @@
 typedef unsigned char __u8;
 typedef unsigned short __u16;
 typedef unsigned int __u32;
+typedef unsigned long long __u64;
 
 typedef int BOOL;
 
@@ -138,5 +139,14 @@ enum {
 #define EV_USER_LEN 64
 #define EV_DATA_LEN 1024
 #define EV_PARAS_MAX_NUM 32
+
+#define	SUCCEED		0
+#define	FAIL		-1
+#define	NOTSUPPORTED	-2
+#define	NETWORK_ERROR	-3
+#define	TIMEOUT_ERROR	-4
+#define	AGENT_ERROR	-5
+#define	GATEWAY_ERROR	-6
+#define	CONFIG_ERROR	-7
 
 #endif

@@ -1,0 +1,2 @@
+sudo apt-get install sysstat
+sudo apt-get install ifstat
