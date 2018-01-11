@@ -47,6 +47,8 @@ def parse_hd_cpuinfo():
 
 		line = fd.readline()
 
+	fd.close()
+
 	return cpus
 
 
