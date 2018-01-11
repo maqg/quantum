@@ -216,7 +216,7 @@ static int byte_value_from_proc_file_ex(FILE *f, const char *label,
 int VM_MEMORY_CACHED(__u64 *data)
 {
 	FILE *f;
-	__u64 value;
+	__u64 value = 0;
 	int res;
 
 	if (NULL == (f = fopen("/proc/meminfo", "r"))) {
@@ -394,7 +394,7 @@ struct json_object *VM_MEMORY_INFO(void)
 	json_add_longvalue(meminfo, (char *)"cached", cache);
 
 	// available = free + buffer + cache
-	available = info.freeram * info.mem_unit + info.bufferram * info.mem_unit + cache;
+	available = (__u64)info.freeram * info.mem_unit + (__u64)info.bufferram * info.mem_unit + cache;
 	json_add_longvalue(meminfo, (char *)"available", available);
 	json_add_doublevalue(meminfo, (char *)"pavailable", info.totalram ? \
 			available / (double)info.totalram * info.mem_unit * 100 : 0.0);
