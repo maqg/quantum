@@ -7,6 +7,7 @@ sys.path.append("../../../")
 
 from core.log import ERROR
 from utils.commonUtil import OCT_SYSTEM, transToStr
+from utils.timeUtil import get_current_time, getStrTime
 
 
 def get_cmdline():
@@ -58,8 +59,44 @@ def get_kernel_info():
 	return data.split("\n")[0]
 
 
+def get_cpu_cores():
+	ret, data = OCT_SYSTEM("cat /proc/cpuinfo | grep -w processor | wc -l")
+	if ret != 0:
+		ERROR("get processor number error")
+		return 1
+
+	return int(data.replace("\n", ""))
+
+
+def get_uptime():
+
+	uptime = {}
+
+	UPTIME_FILE = "/proc/uptime"
+	fd = open(UPTIME_FILE, "r")
+	if not fd:
+		return None
+
+	data = fd.readline().split()
+
+	seconds = int(float(data[0]))
+	freeSeconds = int(float(data[1]))
+
+	MINUTE, HOUR, DAY = 60, 3600, 86400
+	uptime['day'] = int(seconds / DAY )
+	uptime['hour'] = int((seconds % DAY) / HOUR)
+	uptime['minute'] = int((seconds % HOUR) / MINUTE)
+	uptime['second'] = int(seconds % MINUTE)
+	uptime['seconds'] = int(seconds)
+
+	ncores = get_cpu_cores()
+
+	uptime['freeRate'] = round(freeSeconds / (seconds * ncores) * 100.0, 2)
+
+	return uptime  
+
+
 """
-主机名、时间，系统信息，运行时间，重启时间，最大打开文件数，最大进程数
 {
 	"os": "Debianxxxx",
 	"kernel": "",
@@ -82,35 +119,19 @@ def get_sys_info():
 		"hostname": platform.node()
 	}
 
+	uptime = get_uptime()
+	if not uptime:
+		ERROR("got uptime error")
+		return sysinfo
+
+	sysinfo["upTime"] = "%d 天 %d 时 %d 分 %d 秒" % (uptime["day"],
+			uptime["hour"], uptime["minute"], uptime["second"])
+	sysinfo["freeRate"] = uptime["freeRate"]
+
+	rebootTime = get_current_time() - uptime["seconds"] * 1000
+	sysinfo["lastRebootTime"] = getStrTime(rebootTime)
+
 	return sysinfo
-
-"""
-	def load_stat():  
-		loadavg = {}  
-	f = open("/proc/loadavg")  
-	con = f.read().split()  
-f.close()  
-	loadavg['lavg_1']=con[0]  
-	loadavg['lavg_5']=con[1]  
-	loadavg['lavg_15']=con[2]  
-	loadavg['nr']=con[3]  
-	loadavg['last_pid']=con[4]  
-	return loadavg
-
-	def uptime_stat():  
-		uptime = {}  
-	f = open("/proc/uptime")  
-	con = f.read().split()  
-	f.close()  
-all_sec = float(con[0])  
-	MINUTE,HOUR,DAY = 60,3600,86400  
-	uptime['day'] = int(all_sec / DAY )  
-	uptime['hour'] = int((all_sec % DAY) / HOUR)  
-	uptime['minute'] = int((all_sec % HOUR) / MINUTE)  
-	uptime['second'] = int(all_sec % MINUTE)  
-	uptime['Free rate'] = float(con[1]) / float(con[0])  
-	return uptime  
-"""
 
 if __name__ == "__main__":
 	info = get_sys_info()
