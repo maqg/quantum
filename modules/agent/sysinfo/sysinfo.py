@@ -78,6 +78,7 @@ def get_uptime():
 		return None
 
 	data = fd.readline().split()
+	fd.close()
 
 	seconds = int(float(data[0]))
 	freeSeconds = int(float(data[1]))
