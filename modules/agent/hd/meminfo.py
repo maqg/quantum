@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import sys
 sys.path.append("../../../")
 
@@ -7,8 +8,8 @@ from core.log import ERROR
 from utils.commonUtil import OCT_SYSTEM, transToStr
 
 
+VMSTAT_TOOL = "/usr/bin/vmstat"
 MEMINFO_CMD = "/usr/bin/vmstat -s | grep -w K"
-
 
 def get_mem_info():
 	mem_flags = {
@@ -25,6 +26,10 @@ def get_mem_info():
 	}
 
 	info = {}
+
+	if not os.path.exists(VMSTAT_TOOL):
+		ERROR("vmstat tool not exist")
+		return info
 
 	ret, data = OCT_SYSTEM(MEMINFO_CMD)
 	if ret != 0:
