@@ -47,4 +47,18 @@
 		<field name='AT_ServerRequest' type='VARCHAR(10)' caption=''/>
 		<field name='AT_Reply' type='TEXT' caption=''/>
 	</file>
+	<file index="1" name="tb_agent" caption="">
+		<field name='ID' type='VARCHAR(10)' caption=''/>
+		<field name='A_Name' type='VARCHAR(10)' caption=''/>
+		<field name='A_HostName' type='VARCHAR(10)' caption=''/>
+		<field name='A_Address' type='VARCHAR(10)' caption=''/>
+		<field name='A_CreateTime' type='BIGINT' caption=''/>
+		<field name='A_LastSync' type='BIGINT' caption=''/>
+	</file>
+	<file index="1" name="tb_msg" caption="">
+		<field name='M_Type' type='VARCHAR(10)' caption=''/>
+		<field name='M_AgentId' type='VARCHAR(10)' caption=''/>
+		<field name='M_Msg' type='VARCHAR(10)' caption=''/>
+		<field name='M_Time' type='BIGINT' caption=''/>
+	</file>
 </ECRFiles>

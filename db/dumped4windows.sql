@@ -58,7 +58,7 @@ CREATE TABLE `tb_account` (
 
 LOCK TABLES `tb_account` WRITE;
 /*!40000 ALTER TABLE `tb_account` DISABLE KEYS */;
-INSERT INTO `tb_account` VALUES ('c0000000000000000000000000000000',1,7,'admin','','','292f137f691469948acd0e72b141e373','','',0,1513926520000,0,'');
+INSERT INTO `tb_account` VALUES ('c0000000000000000000000000000000',1,7,'admin','','','292f137f691469948acd0e72b141e373','','',0,1516006621000,0,'');
 /*!40000 ALTER TABLE `tb_account` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -79,6 +79,36 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `tb_agent`
+--
+
+DROP TABLE IF EXISTS `tb_agent`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tb_agent` (
+  `ID` varchar(36) NOT NULL DEFAULT '',
+  `A_Name` varchar(64) NOT NULL DEFAULT '',
+  `A_HostName` varchar(64) NOT NULL DEFAULT '',
+  `A_Address` varchar(16) NOT NULL DEFAULT '',
+  `A_CreateTime` bigint(20) NOT NULL DEFAULT '0',
+  `A_LastSync` bigint(20) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`ID`),
+  KEY `tb_agent_id` (`ID`),
+  KEY `tb_agent_name` (`A_Name`),
+  KEY `tb_agent_hostname` (`A_HostName`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_agent`
+--
+
+LOCK TABLES `tb_agent` WRITE;
+/*!40000 ALTER TABLE `tb_agent` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_agent` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `tb_apitrace`
@@ -152,6 +182,33 @@ LOCK TABLES `tb_misc` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `tb_msg`
+--
+
+DROP TABLE IF EXISTS `tb_msg`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tb_msg` (
+  `M_Type` varchar(32) NOT NULL DEFAULT '',
+  `M_AgentId` varchar(36) NOT NULL DEFAULT '',
+  `M_Msg` varchar(4096) NOT NULL DEFAULT '{}',
+  `M_Time` bigint(20) NOT NULL DEFAULT '0',
+  KEY `tb_msg_type` (`M_Type`),
+  KEY `tb_msg_agentid` (`M_AgentId`),
+  KEY `tb_msg_time` (`M_Time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_msg`
+--
+
+LOCK TABLES `tb_msg` WRITE;
+/*!40000 ALTER TABLE `tb_msg` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_msg` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `tb_session`
 --
 
@@ -200,4 +257,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-12-22 15:08:40
+-- Dump completed on 2018-01-15 16:57:01

@@ -86,6 +86,33 @@ ALTER TABLE tb_apitrace ADD INDEX tb_apitrace_createtime (AT_CreateTime);
 ALTER TABLE tb_apitrace ADD INDEX tb_apitrace_finishtime (AT_FinishTime);
 ALTER TABLE tb_apitrace ADD INDEX tb_apitrace_starttime (AT_StartTime);
 
+DROP TABLE IF EXISTS `tb_agent`;
+CREATE TABLE `tb_agent` (
+		`ID` VARCHAR(36) NOT NULL DEFAULT '',
+		`A_Name` VARCHAR(64) NOT NULL DEFAULT '',
+		`A_HostName` VARCHAR(64) NOT NULL DEFAULT '',
+		`A_Address` VARCHAR(16) NOT NULL DEFAULT '',
+		`A_CreateTime` BIGINT NOT NULL DEFAULT '0',
+		`A_LastSync` BIGINT NOT NULL DEFAULT '0',
+		PRIMARY KEY (`ID`)
+) ENGINE=Innodb DEFAULT CHARSET=utf8;
+ALTER TABLE tb_agent ADD INDEX tb_agent_id (ID);
+ALTER TABLE tb_agent ADD INDEX tb_agent_name (A_Name);
+ALTER TABLE tb_agent ADD INDEX tb_agent_hostname (A_HostName);
+
+
+DROP TABLE IF EXISTS `tb_msg`;
+CREATE TABLE `tb_msg` (
+		`M_Type` VARCHAR(32) NOT NULL DEFAULT '',
+		`M_AgentId` VARCHAR(36) NOT NULL DEFAULT '',
+		`M_Msg` VARCHAR(4096) NOT NULL DEFAULT '{}',
+		`M_Time` BIGINT NOT NULL DEFAULT '0'
+) ENGINE=Innodb DEFAULT CHARSET=utf8;
+ALTER TABLE tb_msg ADD INDEX tb_msg_type (M_Type);
+ALTER TABLE tb_msg ADD INDEX tb_msg_agentid (M_AgentId);
+ALTER TABLE tb_msg ADD INDEX tb_msg_time (M_Time);
+
+
 DROP TRIGGER IF EXISTS trigger_delete_account;
 
 DELIMITER //
