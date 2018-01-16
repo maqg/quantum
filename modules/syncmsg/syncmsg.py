@@ -4,7 +4,7 @@ from conf.dbconfig import TB_MSG
 from core import dbmysql
 from core.err_code import OCT_SUCCESS, DB_ERR
 from core.log import ERROR, WARNING
-from models.Agent import getAgentFromCache, Agent, AddAgentToCache
+from models.Agent import getAgentFromCache, Agent, AddAgentToCache, getAgent
 from models.Msg import Msg, getMsgCount
 
 
@@ -40,7 +40,8 @@ def addAgent(db, agentId, name, addr):
 	agent.name = name
 	agent.address = addr
 	agent.add()
-	return agent.toObj()
+	
+	return agent
 
 
 def syncmsg(db, env, arg):
@@ -50,7 +51,10 @@ def syncmsg(db, env, arg):
 	agentObj = getAgentFromCache(agentId)
 	if not agentObj:
 		WARNING("agent not exist in cache %s" % agentId)
-		agentObj = addAgent(db, agentId, arg["REMOTE_ADDR"], arg["REMOTE_ADDR"])
+		agent = getAgent(db, agentId)
+		if not agent:
+			agent = addAgent(db, agentId, arg["REMOTE_ADDR"], arg["REMOTE_ADDR"])
+		agentObj = agent.toObj()
 		AddAgentToCache(agentObj)
 	
 	msg = Msg(db)
