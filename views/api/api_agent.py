@@ -36,6 +36,19 @@ funcList = {
 		}
 	},
 	
+	"APIRemoveAgent": {
+		"name": "删除代理端",
+		"serviceName": "agentmanage.agentmanage_web.web_remove_agent",
+		"paras": {
+			"id": {
+				"type": PARAM_TYPE_STRING,
+				"desc": "",
+				"descCN": "Agent ID",
+				"default": PARAM_NOT_NULL
+			}
+		}
+	},
+	
 	"APIShowAllAgent": {
 		"name": "查看所有代理端",
 		"serviceName": "agentmanage.agentmanage_web.web_show_all_agent",

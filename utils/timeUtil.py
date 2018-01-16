@@ -4,7 +4,7 @@
 import time
 
 
-def get_current_time():
+def get_current_time() -> object:
     return int(float(time.time()) * 1000)
 
 
