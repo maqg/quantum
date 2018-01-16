@@ -6,11 +6,11 @@ from core.log import WARNING
 from utils.commonUtil import transToObj
 from utils.timeUtil import getStrTime, get_current_time
 
-MSG_TYPE_BASIC = "basicInfo"
-MSG_TYPE_CPU = "cpuInfo"
-MSG_TYPE_MEMORY = "memoryInfo"
-MSG_TYPE_DISK = "diskInfo"
-MSG_TYPE_NET = "netInfo"
+MSG_TYPE_BASIC = "BasicInfo"
+MSG_TYPE_CPU = "CpuInfo"
+MSG_TYPE_MEMORY = "MemoryInfo"
+MSG_TYPE_DISK = "DiskInfo"
+MSG_TYPE_NET = "NetInfo"
 
 
 def getMsgCount(db, cond=""):
