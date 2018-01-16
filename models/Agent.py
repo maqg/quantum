@@ -25,6 +25,14 @@ def getAgent(db, agentId):
 	return agent
 
 
+def getAgentFromCache(agentId):
+	return Agent.agents.get(agentId) or None
+
+
+def AddAgentToCache(agentObj):
+	Agent.agents[agentObj["id"]] = agentObj
+
+
 class Agent:
 	agents = {}
 	
@@ -65,13 +73,15 @@ class Agent:
 		return 0
 	
 	def add(self):
-		self.myId = getUuid()
+		if not self.myId:
+			self.myId = getUuid()
+			
 		dbObj = {
 			"ID": self.myId,
 			"A_Name": self.name,
 			"A_Address": self.address,
-			"U_CreateTime": get_current_time(),
-			"U_LastSync": get_current_time(),
+			"A_CreateTime": get_current_time(),
+			"A_LastSync": get_current_time(),
 		}
 		
 		ret = self.db.insert(TB_AGENT, dbObj)

@@ -13,7 +13,7 @@ def appendBaseArg(argObj, request):
 		argObj = {}
 
 	argObj["LAST_ADDR"] = request.remote_ip
-	argObj["REMOTE_ADDR"] = request.headers.get("X-Real-Ip") or ""
+	argObj["REMOTE_ADDR"] = request.headers.get("X-Real-Ip") or argObj["LAST_ADDR"]
 
 	if ("paras" not in argObj.keys()):
 		argObj["paras"] = {}

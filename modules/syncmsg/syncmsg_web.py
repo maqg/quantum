@@ -10,5 +10,5 @@ def web_show_syncmsg(db, env, arg):
 
 
 def web_syncmsg(db, env, arg):
-	(ret, data) = syncmsg(db, arg)
+	(ret, data) = syncmsg(db, env, arg)
 	return buildRetObj(ret, data)
