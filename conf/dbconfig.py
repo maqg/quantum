@@ -15,6 +15,8 @@ TB_MISC = "tb_misc"
 TB_LOG = "tb_log"
 TB_SESSION = "tb_session"
 TB_APITRACE = "tb_apitrace"
+TB_AGENT = "tb_agent"
+TB_MSG = "tb_msg"
 
 def get_sock_file():
 	if (os.path.exists(UNIXSOCKET_DEBIAN)):

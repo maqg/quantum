@@ -13,5 +13,6 @@ PARAM_TYPE_BOOLEAN = "boolean"
 API_MODULE_LIST = sorted(["account",
                           "task",
                           "dashboard",
-                          "sync"
+                          "sync",
+                          "agent"
                           ])
