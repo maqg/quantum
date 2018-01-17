@@ -42,8 +42,6 @@ def api_call(address, port, api_id, api_content, session_key, async=False, serve
 	else:
 		conn = http.client.HTTPConnection(address, port, timeout=30)
 
-	print("connect OK!")
-
 	api_body = {
 		"api": api_id,
 		"paras": api_content,
@@ -65,7 +63,6 @@ def api_call(address, port, api_id, api_content, session_key, async=False, serve
 	except:
 		return (CONNECT_SERVER_ERR, None)
 
-	print("post api OK!")
 	response = conn.getresponse()
 
 	if response.status != 200:

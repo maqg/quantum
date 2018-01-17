@@ -2,6 +2,7 @@
 
 import os
 import threading
+import json
 from time import sleep
 from models.Msg import MSG_TYPE_BASIC, MSG_TYPE_CPUINFO, MSG_TYPE_CPUSTAT, MSG_TYPE_MEMORY, \
 		MSG_TYPE_DISKINFO, MSG_TYPE_DISKSTAT, MSG_TYPE_NET
@@ -13,6 +14,7 @@ from modules.agent.disk.diskinfo import get_disk_info
 from modules.agent.disk.diskstat import get_disk_stat
 from modules.agent.net.netinfo import get_net_info
 from utils.commonUtil import fileToObj, transToStr, getUuid
+from utils.callapi import api_call
 
 CONFIG_FILE_PATH = "/var/quantum/quantum.conf"
 MSG_FILE = "./msg.json"
@@ -57,7 +59,7 @@ def sendMsg():
 	while True:
 		if lock.acquire():
 			for msg_type in msg_types:
-				if len(msg[msg_type] < 5):
+				if len(msg[msg_type]) != 5:
 					continue
 
 				api = "octlink.quantum.v1.sync.APISyncMsg"
@@ -128,8 +130,6 @@ def collectMsg():
 				msg[MSG_TYPE_NET] = msg[MSG_TYPE_NET][-5:]
 
 			lock.release()
-
-		print(msg)
 
 		sleep(5)
 
