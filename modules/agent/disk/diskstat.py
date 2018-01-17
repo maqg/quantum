@@ -10,7 +10,7 @@ from utils.commonUtil import OCT_SYSTEM, transToStr
 IOSTAT_TOOL = "/usr/bin/iostat"
 
 def parse_disk_stat():
-	info = []
+	info = {}
 
 	if not os.path.exists(IOSTAT_TOOL):
 		ERROR("iostat tool not installed")
@@ -44,29 +44,25 @@ def parse_disk_stat():
 			read_total += float(i.split()[2])
 			write_total += float(i.split()[3])
 			
+		dev_name = i.split()[0]
 		dev = {
-			"device": i.split()[0],
 			"tps": round(tps_total/5, 2),
 			"readSpeed": round(read_total/5, 2),  # unit KB/s
 			"writeSpeed": round(write_total/5, 2) # unit KB/s
 		}
 
-		info.append(dev)
+		info[dev_name] = dev
 
 	return info
 
 def get_disk_stat():
-	disk_stat = {}
 
 	stat = parse_disk_stat()
 	if not stat:
 		ERROR("parse disk stat info use iostat command error")
 		return disk_stat
 
-	disk_stat["ndev"] = len(stat)
-	disk_stat["devs"] = stat
-
-	return disk_stat
+	return stat
 
 if __name__ == "__main__":
 	diskstat = get_disk_stat()

@@ -42,7 +42,7 @@ def get_net_stat():
 #unit bps, bits per second
 def get_net_info():
 
-	netinfo = []
+	netinfo = {}
 
 	netstat_before = get_net_stat()
 
@@ -56,12 +56,11 @@ def get_net_info():
 		outspeed = (int(netstat_after[k]["outbytes"]) - int(netstat_before[k]["outbytes"])) / 5 * 8
 
 		tmp = {
-			"interface": k,
 			"incoming": int(inspeed), 
 			"outgoing": int(outspeed)
 		}
 		
-		netinfo.append(tmp)
+		netinfo[k] = tmp
 
 	return netinfo
 

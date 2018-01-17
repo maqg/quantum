@@ -7,9 +7,11 @@ from utils.commonUtil import transToObj
 from utils.timeUtil import getStrTime, get_current_time
 
 MSG_TYPE_BASIC = "BasicInfo"
-MSG_TYPE_CPU = "CpuInfo"
+MSG_TYPE_CPUINFO = "CpuInfo"
+MSG_TYPE_CPUSTAT = "CpuStat"
 MSG_TYPE_MEMORY = "MemoryInfo"
-MSG_TYPE_DISK = "DiskInfo"
+MSG_TYPE_DISKINFO = "DiskInfo"
+MSG_TYPE_DISKSTAT = "DiskStat"
 MSG_TYPE_NET = "NetInfo"
 
 

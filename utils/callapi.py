@@ -7,6 +7,7 @@ import ssl
 import sys
 import time
 
+sys.path.append("../")  # for test in dev env, will delete later
 from views.api.api import PARAM_NOT_NULL
 
 sys.path.append("/OCT/OCTFrame")
@@ -41,6 +42,8 @@ def api_call(address, port, api_id, api_content, session_key, async=False, serve
 	else:
 		conn = http.client.HTTPConnection(address, port, timeout=30)
 
+	print("connect OK!")
+
 	api_body = {
 		"api": api_id,
 		"paras": api_content,
@@ -62,6 +65,7 @@ def api_call(address, port, api_id, api_content, session_key, async=False, serve
 	except:
 		return (CONNECT_SERVER_ERR, None)
 
+	print("post api OK!")
 	response = conn.getresponse()
 
 	if response.status != 200:
@@ -109,13 +113,16 @@ def parse_paras(paras, api_proto):
 
 
 if __name__ == "__main__":
-	api = "octlink.quantum.v1.host.APISyncHostAddr"
+	api = "octlink.quantum.v1.sync.APISyncMsg"
 	paras = {
-		"hostKey": "c52987e0ea09a17dde5622a89e5fd695",
+		"agentId": "123456",
+		"type": "CpuInfo",
+		"data": "hehe",
+		"timeout": 0
 	}
 	session_uuid = "00000000000000000000000000000000"
 
-	(retCode, retObj) = api_call("10.12.13.20", "6443", api, paras, session_key=session_uuid, async=False, https=True)
+	(retCode, retObj) = api_call("10.10.200.2", "9300", api, paras, session_key=session_uuid, async=False, https=False)
 	if (retCode):
 		print("connect to server error")
 	else:
