@@ -14,12 +14,56 @@ from modules.agent.disk.diskinfo import get_disk_info
 from modules.agent.disk.diskstat import get_disk_stat
 from modules.agent.net.netinfo import get_net_info
 from utils.commonUtil import fileToObj, transToStr, getUuid
+from utils.timeUtil import get_current_time
 from utils.callapi import api_call
 
 CONFIG_FILE_PATH = "/var/quantum/quantum.conf"
 MSG_FILE = "./msg.json"
-msg_types = [MSG_TYPE_BASIC, MSG_TYPE_CPUINFO, MSG_TYPE_CPUSTAT, MSG_TYPE_MEMORY, \
-		MSG_TYPE_DISKINFO, MSG_TYPE_DISKSTAT, MSG_TYPE_NET]
+
+funcList = [
+	{
+		"name": MSG_TYPE_BASIC,		
+		"interval": 300,
+		"lastSync": 0,
+		"func": get_sys_info
+	},
+	{
+		"name": MSG_TYPE_CPUINFO,		
+		"interval": 300,
+		"lastSync": 0,
+		"func": get_cpu_info
+	},
+	{
+		"name": MSG_TYPE_CPUSTAT,		
+		"interval": 60,
+		"lastSync": 0,
+		"func": get_cpu_stats
+	},
+	{
+		"name": MSG_TYPE_MEMORY,		
+		"interval": 300,
+		"lastSync": 0,
+		"func": get_mem_info
+	},
+	{
+		"name": MSG_TYPE_DISKINFO,		
+		"interval": 300,
+		"lastSync": 0,
+		"func": get_disk_info
+	},
+	{
+		"name": MSG_TYPE_DISKSTAT,		
+		"interval": 60,
+		"lastSync": 0,
+		"func": get_disk_stat
+	},
+	{
+		"name": MSG_TYPE_NET,		
+		"interval": 60,
+		"lastSync": 0,
+		"func": get_net_info
+	}
+]
 
 lock = threading.Lock()
 
@@ -57,16 +101,19 @@ def sendMsg():
 		fd.close()
 	
 	while True:
+
 		if lock.acquire():
-			for msg_type in msg_types:
-				if len(msg[msg_type]) != 5:
+			for func in funcList:
+				msg_type = func["name"]
+
+				if len(msg[msg_type]) < 1:
 					continue
 
 				api = "octlink.quantum.v1.sync.APISyncMsg"
 				paras = {
 					"agentId": agentId,
 					"type": msg_type,
-					"data": transToStr(msg[msg_type]),
+					"data": transToStr(msg[msg_type][-1]),
 					"timeout": 0
 				}
 				session_uuid = "00000000000000000000000000000000"
@@ -85,66 +132,34 @@ def sendMsg():
 def collectMsg():
 	print("### Collect msg for send!!!")
 
+
 	while True:
-		basicinfo = get_sys_info()
 
-		cpuinfo = get_cpu_info()
+		for func in funcList:
+			now = get_current_time()
 
-		cpustat = get_cpu_stats()
+			if (now - func["lastSync"]) > func["interval"]*1000:
+				func["lastSync"] = now
+				tmp = func["func"]()
+				
+				if lock.acquire():
+					msg[func["name"]].append(tmp)
 
-		meminfo = get_mem_info()
+					if (len(msg[func["name"]]) > 5):
+						msg[func["name"]] = msg[func["name"]][-5:]
+					lock.release()
 
-		diskinfo = get_disk_info()
-
-		diskstat = get_disk_stat()
-
-		netinfo = get_net_info()
 
 		if lock.acquire():
-			msg[MSG_TYPE_BASIC].append(basicinfo)
-			if (len(msg[MSG_TYPE_BASIC]) > 5):
-				msg[MSG_TYPE_BASIC] = msg[MSG_TYPE_BASIC][-5:]
 
-			msg[MSG_TYPE_CPUINFO].append(cpuinfo)
-			if (len(msg[MSG_TYPE_CPUINFO]) > 5):
-				msg[MSG_TYPE_CPUINFO] = msg[MSG_TYPE_CPUINFO][-5:]
-
-			msg[MSG_TYPE_CPUSTAT].append(cpustat)
-			if (len(msg[MSG_TYPE_CPUSTAT]) > 5):
-				msg[MSG_TYPE_CPUSTAT] = msg[MSG_TYPE_CPUSTAT][-5:]
-
-			msg[MSG_TYPE_MEMORY].append(meminfo)
-			if (len(msg[MSG_TYPE_MEMORY]) > 5):
-				msg[MSG_TYPE_MEMORY] = msg[MSG_TYPE_MEMORY][-5:]
-
-			msg[MSG_TYPE_DISKINFO].append(diskinfo)
-			if (len(msg[MSG_TYPE_DISKINFO]) > 5):
-				msg[MSG_TYPE_DISKINFO] = msg[MSG_TYPE_DISKINFO][-5:]
-
-			msg[MSG_TYPE_DISKSTAT].append(diskstat)
-			if (len(msg[MSG_TYPE_DISKSTAT]) > 5):
-				msg[MSG_TYPE_DISKSTAT] = msg[MSG_TYPE_DISKSTAT][-5:]
-
-			msg[MSG_TYPE_NET].append(netinfo)
-			if (len(msg[MSG_TYPE_NET]) > 5):
-				msg[MSG_TYPE_NET] = msg[MSG_TYPE_NET][-5:]
+			fd = open(MSG_FILE, "w")
+			fd.write(transToStr(msg, indent=4))
+			fd.close()
 
 			lock.release()
 
 		sleep(5)
 
-def writeFile():
-
-	while True:
-		if lock.acquire():
-			if len(msg[MSG_TYPE_BASIC]) == 5:
-				fd = open(MSG_FILE, "w")
-				fd.write(transToStr(msg, indent=4))
-				fd.close()
-
-			lock.release()
-
-		sleep(60 * 10)  # every 10 minutes write msgfile
 
 threads = []
 t1 = threading.Thread(target=sendMsg)
@@ -153,8 +168,6 @@ threads.append(t1)
 t2 = threading.Thread(target=collectMsg)
 threads.append(t2)
 
-t3 = threading.Thread(target=writeFile)
-threads.append(t3)
 
 if __name__ == '__main__':
 	for t in threads:
