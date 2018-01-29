@@ -20,6 +20,15 @@ def get_syncmsg(db, arg):
 	limit = arg["paras"].get("limit") or 100
 	
 	cond = "WHERE 1=1 "
+	agentId = paras["agentId"]
+	type = paras["type"]
+
+	if agentId:
+		cond += "AND M_AgentId='%s' " % agentId
+	if type:
+		cond += "AND M_Type='%s' " % type
+
+	cond += "ORDER BY M_Time DESC"
 	ret = db.select(TB_MSG, cond=cond, limit=int(limit), offset=int(start))
 	if ret == -1:
 		ERROR("get agent list error")
@@ -31,7 +40,7 @@ def get_syncmsg(db, arg):
 		item.loadFromObj()
 		listObj["list"].append(item.toObj())
 	
-	listObj["total"] = getMsgCount(db)
+	listObj["total"] = getMsgCount(db, cond)
 	
 	return (OCT_SUCCESS, listObj)
 

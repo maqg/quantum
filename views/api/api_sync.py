@@ -36,7 +36,7 @@ funcList = {
 			"type": {
 				"type": PARAM_TYPE_STRING,
 				"desc": "",
-				"descCN": "类型如NetInfo,DiskInfo,CpuInfo,MemoryInfo,SysInfo等",
+				"descCN": "类型如NetInfo,DiskInfo,CpuInfo,MemoryInfo,BasicInfo",
 				"default": ""
 			},
 			"keyword": {
