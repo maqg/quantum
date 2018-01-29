@@ -119,7 +119,7 @@ if __name__ == "__main__":
 	}
 	session_uuid = "00000000000000000000000000000000"
 
-	(retCode, retObj) = api_call("10.10.200.2", "9300", api, paras, session_key=session_uuid, async=False, https=False)
+	(retCode, retObj) = api_call("10.11.30.168", "9999", api, paras, session_key=session_uuid, async=False, https=False)
 	if (retCode):
 		print("connect to server error")
 	else:

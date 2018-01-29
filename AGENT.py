@@ -14,8 +14,9 @@ from modules.agent.disk.diskinfo import get_disk_info
 from modules.agent.disk.diskstat import get_disk_stat
 from modules.agent.net.netinfo import get_net_info
 from utils.commonUtil import fileToObj, transToStr, getUuid
-from utils.timeUtil import get_current_time
+from utils.timeUtil import get_current_time, getStrTime
 from utils.callapi import api_call
+from core.log import ERROR, DEBUG
 
 CONFIG_FILE_PATH = "/var/quantum/quantum.conf"
 MSG_FILE = "./msg.json"
@@ -78,17 +79,17 @@ msg = {
 }
 
 def sendMsg():
-	print("### Seng msg to Server!!!")
+	DEBUG("### Send msg thread start...")
 
 	if not os.path.exists(CONFIG_FILE_PATH):
-		print("agent config file not exist")
+		ERROR("agent config file not exist")
 		return
 
 	obj = fileToObj(CONFIG_FILE_PATH)
 
 	serverIp = obj.get("serverIp")
 	if not serverIp:
-		print("can't find server ip in config file")
+		ERROR("can't find server ip in config file")
 		return
 
 	agentId = obj.get("agentId")
@@ -118,11 +119,12 @@ def sendMsg():
 				}
 				session_uuid = "00000000000000000000000000000000"
 
-				(retCode, retObj) = api_call(serverIp, "9300", api, paras, session_key=session_uuid, async=False, https=False)
+				(retCode, retObj) = api_call(serverIp, "9999", api, paras, session_key=session_uuid, async=False, https=False)
 				if (retCode):
-					print("connect to server error")
-				else:
-					print((json.dumps(retObj, indent=4)))
+					ERROR("connect to server error")
+					continue
+
+				DEBUG("send msg OK!")
 
 			lock.release()
 
@@ -130,7 +132,7 @@ def sendMsg():
 
 
 def collectMsg():
-	print("### Collect msg for send!!!")
+	DEBUG("### Collect msg thread start...")
 
 
 	while True:
@@ -151,7 +153,6 @@ def collectMsg():
 
 
 		if lock.acquire():
-
 			fd = open(MSG_FILE, "w")
 			fd.write(transToStr(msg, indent=4))
 			fd.close()
@@ -170,6 +171,7 @@ threads.append(t2)
 
 
 if __name__ == '__main__':
+
 	for t in threads:
 		t.setDaemon(True)
 		t.start()
