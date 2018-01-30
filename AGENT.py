@@ -23,45 +23,59 @@ MSG_FILE = "./msg.json"
 
 funcList = [
 	{
-		"name": MSG_TYPE_BASIC,		
-		"interval": 300,
-		"lastSync": 0,
+		"type": MSG_TYPE_BASIC,		
+		"CollectInterval": 300,
+		"lastCollect": 0,
+		"SendInterval": 300,
+		"lastSend": 0,
 		"func": get_sys_info
 	},
 	{
-		"name": MSG_TYPE_CPUINFO,		
-		"interval": 300,
-		"lastSync": 0,
+		"type": MSG_TYPE_CPUINFO,		
+		"CollectInterval": 300,
+		"lastCollect": 0,
+		"SendInterval": 300,
+		"lastSend": 0,
 		"func": get_cpu_info
 	},
 	{
-		"name": MSG_TYPE_CPUSTAT,		
-		"interval": 60,
-		"lastSync": 0,
+		"type": MSG_TYPE_CPUSTAT,		
+		"CollectInterval": 60,
+		"lastCollect": 0,
+		"SendInterval": 60,
+		"lastSend": 0,
 		"func": get_cpu_stats
 	},
 	{
-		"name": MSG_TYPE_MEMORY,		
-		"interval": 300,
-		"lastSync": 0,
+		"type": MSG_TYPE_MEMORY,		
+		"CollectInterval": 300,
+		"lastCollect": 0,
+		"SendInterval": 300,
+		"lastSend": 0,
 		"func": get_mem_info
 	},
 	{
-		"name": MSG_TYPE_DISKINFO,		
-		"interval": 300,
-		"lastSync": 0,
+		"type": MSG_TYPE_DISKINFO,		
+		"CollectInterval": 300,
+		"lastCollect": 0,
+		"SendInterval": 300,
+		"lastSend": 0,
 		"func": get_disk_info
 	},
 	{
-		"name": MSG_TYPE_DISKSTAT,		
-		"interval": 60,
-		"lastSync": 0,
+		"type": MSG_TYPE_DISKSTAT,		
+		"CollectInterval": 60,
+		"lastCollect": 0,
+		"SendInterval": 60,
+		"lastSend": 0,
 		"func": get_disk_stat
 	},
 	{
-		"name": MSG_TYPE_NET,		
-		"interval": 60,
-		"lastSync": 0,
+		"type": MSG_TYPE_NET,		
+		"CollectInterval": 60,
+		"lastCollect": 0,
+		"SendInterval": 60,
+		"lastSend": 0,
 		"func": get_net_info
 	}
 ]
@@ -105,26 +119,30 @@ def sendMsg():
 
 		if lock.acquire():
 			for func in funcList:
-				msg_type = func["name"]
+				msg_type = func["type"]
 
 				if len(msg[msg_type]) < 1:
 					continue
 
-				api = "octlink.quantum.v1.sync.APISyncMsg"
-				paras = {
-					"agentId": agentId,
-					"type": msg_type,
-					"data": transToStr(msg[msg_type][-1]),
-					"timeout": 0
-				}
-				session_uuid = "00000000000000000000000000000000"
+				now = get_current_time()
+				if (now - func["lastSend"]) > func["SendInterval"]*1000:
+					func["lastSend"] = now
 
-				(retCode, retObj) = api_call(serverIp, "9999", api, paras, session_key=session_uuid, async=False, https=False)
-				if (retCode):
-					ERROR("connect to server error")
-					continue
+					api = "octlink.quantum.v1.sync.APISyncMsg"
+					paras = {
+						"agentId": agentId,
+						"type": msg_type,
+						"data": transToStr(msg[msg_type][-1]),
+						"timeout": 0
+					}
+					session_uuid = "00000000000000000000000000000000"
 
-				DEBUG("send msg OK!")
+					(retCode, retObj) = api_call(serverIp, "9999", api, paras, session_key=session_uuid, async=False, https=False)
+					if (retCode):
+						ERROR("connect to server error")
+						continue
+
+					DEBUG("send msg OK!")
 
 			lock.release()
 
@@ -140,15 +158,15 @@ def collectMsg():
 		for func in funcList:
 			now = get_current_time()
 
-			if (now - func["lastSync"]) > func["interval"]*1000:
-				func["lastSync"] = now
+			if (now - func["lastCollect"]) > func["CollectInterval"]*1000:
+				func["lastCollect"] = now
 				tmp = func["func"]()
 				
 				if lock.acquire():
-					msg[func["name"]].append(tmp)
+					msg[func["type"]].append(tmp)
 
-					if (len(msg[func["name"]]) > 5):
-						msg[func["name"]] = msg[func["name"]][-5:]
+					if (len(msg[func["type"]]) > 5):
+						msg[func["type"]] = msg[func["type"]][-5:]
 					lock.release()
 
 
