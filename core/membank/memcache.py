@@ -32,8 +32,8 @@ def refresh_mem(obj, custom=DB_NAME):
 	mshare.close()
 	fd.close()
 
-def get_mem(custom=DB_NAME):
-	bankname = BankAddr % custom
+def get_mem(custom=DB_NAME, bankaddr=BankAddr):
+	bankname = bankaddr % custom
 	fd = open(bankname, "r+")
 	mshare = mmap.mmap(fd.fileno(), MEMSIZE)
 	fd.close()
