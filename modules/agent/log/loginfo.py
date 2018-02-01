@@ -25,8 +25,8 @@ def get_log(db, limit=100):
 
 	ret = db.select("tb_log", limit=int(limit), dbname=DB_NAME)
 	if ret == -1:
-		print("select error")
-		return None
+		ERROR("select tb_log db error")
+		return logList
 
 	for dur in db.cur:
 		obj = row_to_dict("tb_log", dur, DB_NAME)
