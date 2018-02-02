@@ -1,15 +1,18 @@
 #!/usr/bin/python3
 
+import os
 import sys
 sys.path.append("../../../")
 
 from core.log import ERROR
-from utils.commonUtil import OCT_SYSTEM, transToStr
+from core import dbmysql
+from core.membank import memcache
+from utils.commonUtil import OCT_SYSTEM, transToStr, transToObj
 
 VIRSH_UTIL = "/usr/bin/virsh"
 
 #unit Byte
-def get_mem_info():
+def get_meminfo_byvirsh():
 	meminfo = {}
 
 	CMD = "virsh list --all | sed -n '3,$p' | sed '$d'"
@@ -61,7 +64,7 @@ def get_mem_info():
 	
 	return meminfo
 
-def get_cpu_info():
+def get_cpuinfo_byvirsh():
 	cpuinfo = {}
 
 	CMD = "cat /proc/cpuinfo | grep processor | wc -l"
@@ -114,7 +117,7 @@ def get_cpu_info():
 
 	return cpuinfo
 
-def get_vm_number():
+def get_vmnumber_byvirsh():
 	info = {}
 
 	CMD = "%s list --all | sed -n '3,$p' | sed '$d' | wc -l" % VIRSH_UTIL
@@ -135,21 +138,21 @@ def get_vm_number():
 
 	return info
 
-def get_vm_info():
+def get_vminfo_byvirsh():
 	info = {}
 
-	vmNumber = get_vm_number()
+	vmNumber = get_vmnumber_byvirsh()
 	if vmNumber:
 		info["totalVm"] = vmNumber["totalVm"]
 		info["runningVm"] = vmNumber["runningVm"]
 
-	vmCpu = get_cpu_info()
+	vmCpu = get_cpuinfo_byvirsh()
 	if vmCpu:
 		info["vcpuTotal"] = vmCpu["vcpuTotal"]
 		info["vcpuUsed"] = vmCpu["vcpuUsed"]
 		info["vcpuAlloc"] = vmCpu["vcpuAlloc"]
 
-	vmMem = get_mem_info()
+	vmMem = get_meminfo_byvirsh()
 	if vmMem:
 		info["totalMem"] = vmMem["totalMem"]
 		info["vmTotalMem"] = vmMem["vmTotalMem"]
@@ -157,8 +160,201 @@ def get_vm_info():
 
 	return info
 
+
+tablelist = {}
+def row_to_dict(tabname, row, dbname):
+	obj = {}
+	list(map(obj.__setitem__, tablelist[dbname][tabname], row))
+	return obj 
+
+def get_vmnumber_fromdb(db, dbname):
+	total_vm = 0
+	running_vm = 0
+
+	if dbname == "octframe":
+		total_vm = db.rowcount("tb_vm", dbname=dbname);
+		cond = "WHERE V_State='2'"
+		running_vm = db.rowcount("tb_vm", cond=cond, dbname=dbname)
+
+	elif dbname == 'dbcenter':
+		total_vm = db.rowcount("tb_vm", dbname=dbname);
+		cond = "WHERE V_Status='Running'"
+		running_vm = db.rowcount("tb_vm", cond=cond, dbname=dbname)
+
+	return (total_vm, running_vm)
+
+
+def get_cpuinfo_fromdb(db, dbname):
+	vcpuTotal = 0
+	vcpuUsed = 0
+	vcpuAlloc = 0
+
+	if dbname == "octframe":
+		ret = db.select("tb_vm", dbname=dbname)
+		if ret == -1:
+			ERROR("select tb_vm from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("tb_vm", dur, dbname)
+			basic = transToObj(obj['V_Basic'].replace('\n', '\\n'))
+			if basic == None:
+				continue
+
+			state = int(obj['V_State'])
+
+			vcpuAlloc += int(basic["cpu"])
+			if state == 2:  #running
+				vcpuUsed += int(basic["cpu"])
+
+		ret = db.select("tb_host", dbname=dbname)
+		if ret == -1:
+			ERROR("select tb_host from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("tb_host", dur, dbname)
+			other = transToObj(obj['H_Others'].replace('\n', '\\n'))
+
+			vcpuTotal = int(other["cpu_core"]) * 4
+
+	else:
+		ret = db.select("tb_vm", dbname=dbname)
+		if ret == -1:
+			ERROR("select tb_vm from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("tb_vm", dur, dbname)
+			cpunum = int(obj["V_CpuNum"])
+			status = obj["V_Status"]
+
+			vcpuAlloc += cpunum
+			if status == "Running":
+				vcpuUsed += cpunum
+
+		ret = db.select("v_host", dbname=dbname)
+		if ret == -1:
+			ERROR("select v_host from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("v_host", dur, dbname)
+			vcpuTotal += int(obj["VCpuTotal"])
+
+	return (vcpuTotal, vcpuUsed, vcpuAlloc)
+
+def get_meminfo_fromdb(db, dbname):
+	totalMem = 0
+	vmTotalMem = 0
+	vmUsedMem = 0
+
+
+	if dbname == "octframe":
+		ret = db.select("tb_vm", dbname=dbname)
+		if ret == -1:
+			ERROR("select tb_vm from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("tb_vm", dur, dbname)
+			basic = transToObj(obj['V_Basic'].replace('\n', '\\n'))
+			if basic == None:
+				continue
+
+			state = int(obj['V_State'])
+			if state == 2:  #running
+				pass
+
+		ret = db.select("tb_host", dbname=dbname)
+		if ret == -1:
+			ERROR("select tb_host from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("tb_host", dur, dbname)
+			other = transToObj(obj['H_Others'].replace('\n', '\\n'))
+
+	else:
+		ret = db.select("tb_vm", dbname=dbname)
+		if ret == -1:
+			ERROR("select tb_vm from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("tb_vm", dur, dbname)
+			memory = int(obj["V_Memory"]) #unit MByte
+			status = obj["V_Status"]
+
+			vmTotalMem += memory * 1024 * 1024
+			if status == "Running":
+				vmUsedMem += memory * 1024 * 1024 #unit Byte
+
+		ret = db.select("v_host", dbname=dbname)
+		if ret == -1:
+			ERROR("select v_host from db err")
+
+		for dur in db.cur:
+			obj = row_to_dict("v_host", dur, dbname)
+			tmp = int(obj["MemoryTotal"]) #unit KB
+			totalMem += tmp * 1024  #unit Byte
+
+	return (totalMem, vmTotalMem, vmUsedMem)
+	
+def get_vminfo_fromdb(dbname):
+	BANK_ADDR = "/OCT/OCTFrame/core/membank/%s"
+	membody = memcache.get_mem(dbname, BANK_ADDR)
+	global tablelist
+	tablelist = membody.get('tablelist', {}) 
+
+	db = dbmysql.mysqldb()
+	
+	info = {}
+	numberinfo = get_vmnumber_fromdb(db, dbname)
+	info["totalVm"] = numberinfo[0]
+	info["runningVm"] = numberinfo[1]
+
+	cpuinfo = get_cpuinfo_fromdb(db, dbname)
+	info["vcpuTotal"] = cpuinfo[0]
+	info["vcpuUsed"] = cpuinfo[1]
+	info["vcpuAlloc"] = cpuinfo[2]
+
+	meminfo = get_meminfo_fromdb(db, dbname)
+	print(meminfo)
+
+	return info
+
 if __name__ == "__main__":
-	info = get_vm_info()
-	print(transToStr(info))
+
+	if not os.path.exists("/OCT/etc/version"):
+		ERROR("file /OCT/etc/version not exist, this host not rvm")
+		sys.exit(1)
+
+	if not os.path.exists("/OCT/etc/internal_version"):
+		ERROR("file /OCT/etc/internal_version not exist, this host not rvm")
+		sys.exit(1)
+
+	with open("/OCT/etc/internal_version", "r") as fd:
+		content = fd.readline()
+
+		if 'center' in content or 'RVMCenter' in content:
+			PLATFORM = "center"
+		elif 'allinone' in content:
+			PLATFORM = "allinone"
+		else:
+			PLATFORM = "server"
+
+	with open("/OCT/etc/version", "r") as fd:
+		content = fd.readline()
+		VERSION = content.split('.')[0]
+
+		if VERSION != '3' and VERSION != '5':
+			ERROR("unsupport rvm version [%s]" % VERSION)
+			sys.exit(1)
 
 
+	if PLATFORM == "center": 
+		if VERSION == '3':
+			DB_NAME = 'octframe'
+		else:
+			DB_NAME = 'dbcenter'
+
+		info = get_vminfo_fromdb(DB_NAME)
+		print(info)
+
+	else:
+		info = get_vminfo_byvirsh()
+		print(info)
