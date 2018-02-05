@@ -257,9 +257,12 @@ def get_meminfo_fromdb(db, dbname):
 			if basic == None:
 				continue
 
+			memory = int(basic["memory"]) #unit MByte
+			vmTotalMem += memory * 1024 * 1024
+
 			state = int(obj['V_State'])
 			if state == 2:  #running
-				pass
+				vmUsedMem += memory * 1024 * 1024 #unit Byte
 
 		ret = db.select("tb_host", dbname=dbname)
 		if ret == -1:
@@ -267,7 +270,12 @@ def get_meminfo_fromdb(db, dbname):
 
 		for dur in db.cur:
 			obj = row_to_dict("tb_host", dur, dbname)
-			other = transToObj(obj['H_Others'].replace('\n', '\\n'))
+			memObj = transToObj(obj['H_Memory'].replace('\n', '\\n'))
+			if memObj == None:
+				continue
+
+			tmp = int(memObj["total"])  #unit MByte
+			totalMem += tmp * 1024 * 1024 #unit Byte
 
 	else:
 		ret = db.select("tb_vm", dbname=dbname)
@@ -313,7 +321,9 @@ def get_vminfo_fromdb(dbname):
 	info["vcpuAlloc"] = cpuinfo[2]
 
 	meminfo = get_meminfo_fromdb(db, dbname)
-	print(meminfo)
+	info["totalMem"] = meminfo[0]
+	info["vmTotalMem"] = meminfo[1]
+	info["vmUsedMem"] = meminfo[2]
 
 	return info
 
